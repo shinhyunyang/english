@@ -104,7 +104,10 @@
 
       <!-- Action Quick Bar -->
       <div class="flex items-center gap-1.5 shrink-0">
-        <button id="syncNowBtn" title="시트 동기화" class="w-8 h-8 rounded-lg border border-red-200 bg-red-50 text-red-600 flex items-center justify-center active:scale-95 transition">
+        <button id="openSearchBtn" title="단어 검색" class="w-8 h-8 rounded-lg border border-red-200 bg-red-50 text-red-600 flex items-center justify-center active:scale-95 transition">
+          <i class="fa-solid fa-magnifying-glass text-xs"></i>
+        </button>
+        <button id="syncNowBtn" title="시트 동기화" class="w-8 h-8 rounded-lg border border-zinc-200 bg-white text-zinc-700 flex items-center justify-center active:scale-95 transition">
           <i id="syncNowIcon" class="fa-solid fa-arrows-rotate text-xs"></i>
         </button>
         <button id="toggleListBtn" title="목록" class="px-2 h-8 rounded-lg border border-zinc-200 bg-white text-zinc-700 flex items-center gap-1 text-xs font-semibold active:scale-95 transition">
@@ -123,16 +126,25 @@
 
     <!-- Top Mode Selector & Progress -->
     <div class="mb-3 space-y-2">
-      <!-- Mode Tabs (Scrollable on small devices) -->
-      <div class="grid grid-cols-3 gap-1 bg-zinc-200/80 p-1 rounded-xl text-center">
-        <button id="modeRandom" class="py-1.5 text-[11px] font-bold rounded-lg transition-all shadow-xs bg-white text-red-600">
-          <i class="fa-solid fa-shuffle mr-0.5"></i> 랜덤
+      <!-- Mode Tabs (5-Column Grid with All and Search) -->
+      <div class="grid grid-cols-5 gap-1 bg-zinc-200/80 p-1 rounded-xl text-center">
+        <button id="modeRandom" class="py-1.5 px-0.5 text-[10px] sm:text-[11px] font-bold rounded-lg transition-all shadow-xs bg-white text-red-600 truncate flex items-center justify-center gap-1">
+          <i class="fa-solid fa-shuffle text-[10px]"></i>
+          <span>랜덤</span>
         </button>
-        <button id="modeEnToKo" class="py-1.5 text-[11px] font-semibold rounded-lg text-zinc-600 transition-all">
+        <button id="modeEnToKo" class="py-1.5 px-0.5 text-[10px] sm:text-[11px] font-semibold rounded-lg text-zinc-600 transition-all truncate">
           영어→해석
         </button>
-        <button id="modeKoToEn" class="py-1.5 text-[11px] font-semibold rounded-lg text-zinc-600 transition-all">
+        <button id="modeKoToEn" class="py-1.5 px-0.5 text-[10px] sm:text-[11px] font-semibold rounded-lg text-zinc-600 transition-all truncate">
           해석→영어
+        </button>
+        <button id="modeAll" class="py-1.5 px-0.5 text-[10px] sm:text-[11px] font-semibold rounded-lg text-zinc-600 transition-all truncate flex items-center justify-center gap-1">
+          <i class="fa-solid fa-globe text-[10px]"></i>
+          <span>All</span>
+        </button>
+        <button id="modeSearch" class="py-1.5 px-0.5 text-[10px] sm:text-[11px] font-semibold rounded-lg text-zinc-600 transition-all truncate flex items-center justify-center gap-1">
+          <i class="fa-solid fa-magnifying-glass text-[10px]"></i>
+          <span>Search</span>
         </button>
       </div>
 
@@ -301,6 +313,122 @@
     </div>
   </div>
 
+  <!-- Search Modal (Mobile Sheet Style) -->
+  <div id="searchModal" class="fixed inset-0 bg-zinc-900/60 backdrop-blur-xs z-50 flex flex-col justify-end sm:justify-center items-center p-0 sm:p-4 hidden">
+    <div class="bg-white rounded-t-3xl sm:rounded-2xl w-full max-w-md max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
+      <!-- Search Modal Header -->
+      <div class="px-4 py-3.5 border-b border-zinc-100 flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <div class="w-7 h-7 rounded-lg bg-red-50 text-red-600 flex items-center justify-center text-xs">
+            <i class="fa-solid fa-magnifying-glass"></i>
+          </div>
+          <div>
+            <h2 class="text-sm font-bold text-zinc-900">단어 사전 검색</h2>
+            <p class="text-[11px] text-zinc-400">뜻, 미국 여성 발음(1.1x), 예문 검색</p>
+          </div>
+        </div>
+        <button id="closeSearchModalBtn" class="w-7 h-7 rounded-full bg-zinc-100 text-zinc-500 hover:bg-zinc-200 flex items-center justify-center">
+          <i class="fa-solid fa-xmark text-xs"></i>
+        </button>
+      </div>
+
+      <!-- Search Input Box -->
+      <div class="p-3 border-b border-zinc-100 bg-zinc-50">
+        <div class="flex items-center gap-2">
+          <div class="relative flex-1">
+            <i class="fa-solid fa-search absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 text-xs"></i>
+            <input type="text" id="dictSearchInput" placeholder="영어 단어 또는 한국어 표현 검색..." class="w-full pl-8 pr-8 py-2 text-xs bg-white border border-zinc-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-red-500" autocomplete="off">
+            <button id="clearDictSearchBtn" class="absolute right-2.5 top-1/2 -translate-y-1/2 text-zinc-300 hover:text-zinc-500 hidden text-xs">
+              <i class="fa-solid fa-circle-xmark"></i>
+            </button>
+          </div>
+          <button id="execSearchBtn" class="px-3 py-2 bg-red-600 hover:bg-red-700 text-white text-xs font-bold rounded-xl active:scale-95 transition shrink-0">
+            검색
+          </button>
+        </div>
+      </div>
+
+      <!-- Modal Body -->
+      <div class="flex-1 overflow-y-auto p-4 space-y-3 hide-scrollbar">
+        <!-- Live Sheet Autocomplete Suggestions -->
+        <div id="searchSuggestionsBox" class="space-y-1.5 hidden">
+          <p class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">시트 등록 단어 추천</p>
+          <div id="suggestionsList" class="space-y-1"></div>
+        </div>
+
+        <!-- Empty Placeholder -->
+        <div id="searchEmptyPlaceholder" class="text-center py-10 space-y-2">
+          <div class="w-12 h-12 rounded-full bg-zinc-100 text-zinc-300 mx-auto flex items-center justify-center text-lg">
+            <i class="fa-solid fa-book-open"></i>
+          </div>
+          <p class="text-xs font-bold text-zinc-600">궁금한 단어나 뜻을 검색해보세요</p>
+          <p class="text-[11px] text-zinc-400">구글 시트 내 단어 자동 완성과 원어민 예문 사전을 함께 지원합니다.</p>
+        </div>
+
+        <!-- Search Result Details Card -->
+        <div id="searchResultDetail" class="space-y-3 hidden">
+          <div class="bg-zinc-50 border border-zinc-200 rounded-2xl p-4 space-y-2">
+            <div class="flex items-start justify-between gap-2">
+              <div>
+                <div class="flex items-center gap-2">
+                  <h3 id="resultWord" class="text-xl font-extrabold text-zinc-900 tracking-tight">-</h3>
+                  <button id="speakResultWordBtn" class="w-7 h-7 rounded-full bg-red-50 text-red-600 hover:bg-red-100 flex items-center justify-center transition active:scale-90" title="발음 듣기 (1.1배속 미국 여성)">
+                    <i class="fa-solid fa-volume-high text-xs"></i>
+                  </button>
+                </div>
+                <span id="resultPhonetic" class="text-xs text-zinc-400 font-mono hidden"></span>
+              </div>
+              <span id="resultSourceBadge" class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-red-50 text-red-600 border border-red-200 shrink-0">시트 단어</span>
+            </div>
+
+            <!-- Meaning -->
+            <div class="pt-2 border-t border-zinc-200/80">
+              <p class="text-[10px] font-bold text-zinc-400 mb-0.5">핵심 뜻</p>
+              <p id="resultMeaning" class="text-sm font-semibold text-zinc-800 leading-snug">-</p>
+            </div>
+
+            <!-- Jump to Card Button (if from sheet) -->
+            <div id="jumpToCardBox" class="pt-2 hidden">
+              <button id="jumpToCardBtn" class="w-full py-1.5 bg-white border border-red-200 text-red-600 hover:bg-red-50 text-xs font-bold rounded-xl transition flex items-center justify-center gap-1.5">
+                <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
+                <span>플래시카드에서 바로 학습하기</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Sheet Example Box -->
+          <div id="resultSheetExampleBox" class="bg-white border border-zinc-200 rounded-2xl p-3.5 space-y-1 hidden">
+            <div class="flex items-center justify-between">
+              <span class="text-[11px] font-bold text-zinc-500 flex items-center gap-1">
+                <i class="fa-solid fa-quote-left text-zinc-400 text-[10px]"></i>
+                시트 예문
+              </span>
+              <button id="speakResultSheetExBtn" class="w-6 h-6 rounded-full hover:bg-zinc-100 text-zinc-500 flex items-center justify-center transition" title="예문 발음">
+                <i class="fa-solid fa-volume-low text-xs"></i>
+              </button>
+            </div>
+            <p id="resultSheetExample" class="text-xs font-medium text-zinc-700 italic leading-relaxed">-</p>
+          </div>
+
+          <!-- Native Recommended Example Box -->
+          <div id="resultAiExampleBox" class="bg-rose-50/60 border border-rose-100 rounded-2xl p-3.5 space-y-1">
+            <div class="flex items-center justify-between">
+              <span class="text-[11px] font-bold text-red-700 flex items-center gap-1">
+                <i class="fa-solid fa-wand-magic-sparkles text-red-500 text-[10px]"></i>
+                원어민 빈출 추천 예문
+              </span>
+              <button id="speakResultAiExBtn" class="w-6 h-6 rounded-full hover:bg-rose-100 text-red-600 flex items-center justify-center transition" title="추천 예문 발음">
+                <i class="fa-solid fa-volume-low text-xs"></i>
+              </button>
+            </div>
+            <p id="resultAiExample" class="text-xs font-semibold text-zinc-900 leading-relaxed">-</p>
+            <p id="resultAiMeaning" class="text-[11px] text-zinc-500 font-normal leading-relaxed">-</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Toast Notification -->
   <div id="toast" class="fixed bottom-6 left-1/2 -translate-x-1/2 px-4 py-2 bg-zinc-900/90 text-white text-xs font-semibold rounded-full shadow-lg transition-all duration-300 opacity-0 pointer-events-none z-50 flex items-center gap-1.5 max-w-[90vw] text-center">
     <i id="toastIcon" class="fa-solid fa-check text-red-400 text-xs"></i>
@@ -324,10 +452,37 @@
     ];
 
     let words = [...FALLBACK_WORDS];
+    let sheetWords = [...FALLBACK_WORDS];
+    let allDictionaryWords = [
+      { english: "figure out", korean: "알아내다, 방법을 찾아내다", example: "Give me a minute to figure out how this works." },
+      { english: "touch base", korean: "간단히 상황을 공유하다, 연락하다", example: "Let's touch base next Monday before the team meeting." },
+      { english: "make sense", korean: "이해가 되다, 말이 되다", example: "That totally makes sense, thanks for explaining." },
+      { english: "wrap up", korean: "마무리 짓다, 끝내다", example: "We should wrap up this meeting in five minutes." },
+      { english: "on the fence", korean: "결정을 못 내리고 망설이는", example: "I'm still on the fence about moving to New York." },
+      { english: "catch up", korean: "밀린 대화를 나누다, 따라잡다", example: "We haven't seen each other in ages, let's grab coffee and catch up." },
+      { english: "play it by ear", korean: "상황 봐서 즉흥적으로 결정하다", example: "We don't have a fixed plan for tomorrow, let's just play it by ear." },
+      { english: "call it a day", korean: "오늘 일/공부를 마무리하다", example: "It's already 7 PM, let's call it a day and head home." },
+      { english: "out of the blue", korean: "갑자기, 뜬금없이, 난데없이", example: "She texted me out of the blue after three years." },
+      { english: "run into", korean: "우연히 마주치다", example: "Guess who I ran into at the grocery store today?" },
+      { english: "overwhelmed", korean: "벅찬, 정신없이 압도된", example: "I felt a bit overwhelmed with so many tasks at once." },
+      { english: "worth it", korean: "그만한 가치가 있는, 보람 있는", example: "The hike was exhausting, but the view was totally worth it." },
+      { english: "second thoughts", korean: "다시 생각해보니 드는 의구심/재고", example: "Are you having second thoughts about taking the new job?" },
+      { english: "take for granted", korean: "당연하게 여기다", example: "Don't take your health for granted; get some rest." },
+      { english: "relatable", korean: "누구나 공감할 수 있는, 친근한", example: "Her stories on Instagram are so honest and relatable." },
+      { english: "go with the flow", korean: "흘러가는 대로 두다, 대세를 따르다", example: "Don't stress over little details, just go with the flow." },
+      { english: "straightforward", korean: "복잡하지 않고 직관적인, 솔직한", example: "The application process was super easy and straightforward." },
+      { english: "spontaneous", korean: "즉흥적인, 자연발생적인", example: "We took a spontaneous weekend road trip to the coast." },
+      { english: "procrastinate", korean: "일을 자꾸 미루다", example: "Stop procrastinating and finish your assignment now." },
+      { english: "hang in there", korean: "조금만 더 버텨, 힘내", example: "Things will get better soon, just hang in there!" },
+      { english: "spot on", korean: "정확한, 딱 들어맞는", example: "Your prediction about the game was completely spot on." },
+      { english: "under the weather", korean: "컨디션이 안 좋은, 으슬으슬한", example: "I'm feeling a little under the weather, so I'll stay in tonight." }
+    ];
     let currentIndex = 0;
     let isRevealed = false;
     let studyMode = 'random';
     let currentCardMode = 'enToKo';
+    let currentActiveItem = null; // 현재 화면에 표시 중인 고정 단어 객체
+    let isSpeakingAudio = false;
     const aiExampleCache = new Map();
 
     // DOM Elements
@@ -336,6 +491,7 @@
     const speakPromptBtn = document.getElementById('speakPromptBtn');
     const answerSection = document.getElementById('answerSection');
     const answerContent = document.getElementById('answerContent');
+    const exampleBox = document.getElementById('exampleBox');
     const exampleContent = document.getElementById('exampleContent');
     const speakAnswerBtn = document.getElementById('speakAnswerBtn');
     const speakExampleBtn = document.getElementById('speakExampleBtn');
@@ -361,6 +517,8 @@
     const modeEnToKo = document.getElementById('modeEnToKo');
     const modeKoToEn = document.getElementById('modeKoToEn');
     const modeRandom = document.getElementById('modeRandom');
+    const modeAll = document.getElementById('modeAll');
+    const modeSearch = document.getElementById('modeSearch');
 
     const listModal = document.getElementById('listModal');
     const toggleListBtn = document.getElementById('toggleListBtn');
@@ -376,6 +534,37 @@
     const resetSampleBtn = document.getElementById('resetSampleBtn');
     const syncNowBtn = document.getElementById('syncNowBtn');
     const syncNowIcon = document.getElementById('syncNowIcon');
+
+    // Search Modal Elements
+    const openSearchBtn = document.getElementById('openSearchBtn');
+    const searchModal = document.getElementById('searchModal');
+    const closeSearchModalBtn = document.getElementById('closeSearchModalBtn');
+    const dictSearchInput = document.getElementById('dictSearchInput');
+    const clearDictSearchBtn = document.getElementById('clearDictSearchBtn');
+    const execSearchBtn = document.getElementById('execSearchBtn');
+    const searchSuggestionsBox = document.getElementById('searchSuggestionsBox');
+    const suggestionsList = document.getElementById('suggestionsList');
+    const searchResultDetail = document.getElementById('searchResultDetail');
+    const searchEmptyPlaceholder = document.getElementById('searchEmptyPlaceholder');
+
+    const resultWord = document.getElementById('resultWord');
+    const resultPhonetic = document.getElementById('resultPhonetic');
+    const resultSourceBadge = document.getElementById('resultSourceBadge');
+    const resultMeaning = document.getElementById('resultMeaning');
+    const speakResultWordBtn = document.getElementById('speakResultWordBtn');
+    const jumpToCardBox = document.getElementById('jumpToCardBox');
+    const jumpToCardBtn = document.getElementById('jumpToCardBtn');
+
+    const resultSheetExampleBox = document.getElementById('resultSheetExampleBox');
+    const resultSheetExample = document.getElementById('resultSheetExample');
+    const speakResultSheetExBtn = document.getElementById('speakResultSheetExBtn');
+
+    const resultAiExampleBox = document.getElementById('resultAiExampleBox');
+    const resultAiExample = document.getElementById('resultAiExample');
+    const resultAiMeaning = document.getElementById('resultAiMeaning');
+    const speakResultAiExBtn = document.getElementById('speakResultAiExBtn');
+
+    let activeSearchResult = null;
 
     function parseGoogleSheetUrl(url) {
       try {
@@ -524,6 +713,8 @@
     function determineCardMode() {
       if (studyMode === 'random') {
         currentCardMode = Math.random() < 0.5 ? 'enToKo' : 'koToEn';
+      } else if (studyMode === 'all') {
+        currentCardMode = 'enToKo'; // All 모드는 영어가 항상 먼저 출제
       } else {
         currentCardMode = studyMode;
       }
@@ -538,15 +729,16 @@
       }
 
       // 초기 대기 텍스트
-      aiExampleContent.textContent = "AI가 추가 예문을 생성하고 있습니다...";
+      aiExampleContent.textContent = "원어민이 자주 쓰는 실전 표현 생성 중...";
       aiExampleMeaning.textContent = "";
 
       try {
         const apiKey = "";
         const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
         
-        const systemPrompt = "You are a native English teacher. Generate exactly one realistic, natural, clear English example sentence for the given word, followed by its accurate Korean translation. Keep it modern, concise, and easy to memorize.";
-        const userPrompt = `Word: "${wordItem.english}" (Meaning: "${wordItem.korean}"). Return exactly a JSON object with keys "en" and "ko". Do not write markdown blocks or backticks.`;
+        const systemPrompt = "You are an expert American native English coach specializing in high-frequency real-world English. Generate exactly ONE highly practical, authentic, and modern sentence that native speakers frequently use in daily life, work, or casual conversation (incorporating common collocations or idioms). Avoid stiff, textbook-style, or awkward dictionary sentences. The Korean translation must be natural, contemporary, and accurately capture the conversational tone.";
+        const userPrompt = `Target Word/Expression: "${wordItem.english}" (Core meaning: "${wordItem.korean}").
+Create one high-frequency, natural conversational sentence showcasing how native speakers actually use this in real situations. Return a JSON object with keys "en" and "ko". Do not use markdown backticks.`;
 
         const response = await fetch(apiUrl, {
           method: 'POST',
@@ -582,8 +774,8 @@
         }
       } catch (e) {
         const fallback = {
-          en: `She mastered the word "${wordItem.english}" in no time.`,
-          ko: `그녀는 "${wordItem.korean}"의 의미를 금방 마스터했습니다.`
+          en: `In real life, people often say: "It's important to be ${wordItem.english} when dealing with everyday challenges."`,
+          ko: `실생활에서는 일상적인 문제를 다룰 때 이렇게 자연스럽게 쓰입니다.`
         };
         aiExampleCache.set(cacheKey, fallback);
         if (words[currentIndex]?.english === cacheKey) {
@@ -609,13 +801,14 @@
       }
 
       const item = words[currentIndex];
+      currentActiveItem = item; // 현재 렌더링된 단어를 확정 저장하여 비동기 변경 방지
       progressText.textContent = `${currentIndex + 1} / ${words.length}`;
       progressBar.style.width = `${((currentIndex + 1) / words.length) * 100}%`;
       totalWordCountBadge.textContent = words.length;
 
       // 폰트 잔상 및 중복 표기 방지: 텍스트를 깔끔하게 교체
       if (currentCardMode === 'enToKo') {
-        promptLabel.textContent = "English Word (A)";
+        promptLabel.textContent = studyMode === 'all' ? "English Expression" : "English Word (A)";
         promptContent.textContent = item.english;
         promptContent.className = "text-2xl sm:text-3xl font-extrabold text-zinc-900 tracking-tight leading-snug py-1";
 
@@ -648,8 +841,17 @@
         revealBtnIcon.className = "fa-solid fa-arrow-right text-xs";
         revealBtn.className = "flex-1 h-11 px-4 rounded-xl bg-zinc-900 hover:bg-black text-white font-bold text-sm shadow-md active:scale-98 transition flex items-center justify-center gap-1.5";
         
-        // AI 예문 트리거
-        loadCompanionAiExample(item);
+        if (studyMode === 'all') {
+          // All 모드: 시트 예문은 숨기고 원어민 추천 예문만 단독 표시
+          if (exampleBox) exampleBox.classList.add('hidden');
+          if (aiExampleBox) aiExampleBox.classList.remove('hidden');
+          loadCompanionAiExample(item);
+        } else {
+          // 일반 시트 모드: 시트 원본 예문과 추가 추천 예문 모두 표시
+          if (exampleBox) exampleBox.classList.remove('hidden');
+          if (aiExampleBox) aiExampleBox.classList.remove('hidden');
+          loadCompanionAiExample(item);
+        }
       } else {
         answerSection.classList.add('hidden');
         revealBtnText.textContent = "정답 & 예문 확인";
@@ -729,45 +931,62 @@
         showToast("음성 기능이 지원되지 않는 브라우저입니다.", true);
         return;
       }
+      if (!text || text === '-' || text.trim() === '') return;
+
+      // 브라우저 음성 큐 즉시 정리 및 연속 클릭 시 꼬임 방지
       window.speechSynthesis.cancel();
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.lang = lang;
-      utterance.rate = 1.1; // 1.1배속
 
-      if (lang.startsWith('en')) {
-        const femaleVoice = getUSFemaleVoice();
-        if (femaleVoice) utterance.voice = femaleVoice;
-      }
+      // cancel() 처리 지연으로 인한 큐 꼬임을 방지하기 위해 미세 틱 후 발화
+      setTimeout(() => {
+        try {
+          const utterance = new SpeechSynthesisUtterance(text.trim());
+          utterance.lang = lang;
+          utterance.rate = 1.1; // 1.1배속
 
-      window.speechSynthesis.speak(utterance);
+          if (lang.startsWith('en')) {
+            const femaleVoice = getUSFemaleVoice();
+            if (femaleVoice) utterance.voice = femaleVoice;
+          }
+
+          window.speechSynthesis.speak(utterance);
+        } catch (e) {
+          console.error("TTS playback error:", e);
+        }
+      }, 30);
     }
 
     function speakPrompt() {
-      const item = words[currentIndex];
-      if (!item) return;
-      if (currentCardMode === 'enToKo') {
-        speakText(item.english, 'en-US');
+      // 화면에 실제 표시된 단어/표현을 최우선으로 재생
+      if (currentActiveItem && currentCardMode === 'enToKo') {
+        speakText(currentActiveItem.english, 'en-US');
+      } else {
+        const text = promptContent ? promptContent.textContent.trim() : '';
+        if (text && text !== '-') {
+          speakText(text, currentCardMode === 'enToKo' ? 'en-US' : 'ko-KR');
+        }
       }
     }
 
     function speakCurrentWord() {
-      const item = words[currentIndex];
-      if (item && item.english) {
-        speakText(item.english, 'en-US');
+      if (currentActiveItem && currentActiveItem.english) {
+        speakText(currentActiveItem.english, 'en-US');
+      } else if (words[currentIndex] && words[currentIndex].english) {
+        speakText(words[currentIndex].english, 'en-US');
       }
     }
 
     function speakCurrentExample() {
-      const item = words[currentIndex];
-      if (item && item.example && item.example !== "등록된 예문이 없습니다.") {
-        speakText(item.example, 'en-US');
+      if (currentActiveItem && currentActiveItem.example && currentActiveItem.example !== "등록된 예문이 없습니다.") {
+        speakText(currentActiveItem.example, 'en-US');
+      } else if (words[currentIndex] && words[currentIndex].example) {
+        speakText(words[currentIndex].example, 'en-US');
       }
     }
 
     function speakCompanionExample() {
-      const item = words[currentIndex];
-      if (!item) return;
-      const data = aiExampleCache.get(item.english);
+      const targetEnglish = currentActiveItem ? currentActiveItem.english : (words[currentIndex]?.english);
+      if (!targetEnglish) return;
+      const data = aiExampleCache.get(targetEnglish);
       if (data && data.en) {
         speakText(data.en, 'en-US');
       }
@@ -858,20 +1077,98 @@
 
     // Study Mode switchers
     function setStudyMode(mode) {
-      studyMode = mode;
-      const activeClass = "py-1.5 text-[11px] font-bold rounded-lg transition-all shadow-xs bg-white text-red-600";
-      const inactiveClass = "py-1.5 text-[11px] font-semibold rounded-lg text-zinc-600 transition-all";
+      const activeClass = "py-1.5 px-0.5 text-[10px] sm:text-[11px] font-bold rounded-lg transition-all shadow-xs bg-white text-red-600 truncate";
+      const inactiveClass = "py-1.5 px-0.5 text-[10px] sm:text-[11px] font-semibold rounded-lg text-zinc-600 transition-all truncate";
 
-      modeRandom.className = mode === 'random' ? activeClass : inactiveClass;
-      modeEnToKo.className = mode === 'enToKo' ? activeClass : inactiveClass;
-      modeKoToEn.className = mode === 'koToEn' ? activeClass : inactiveClass;
+      if (mode === 'all') {
+        studyMode = 'all';
+        // 전체 사전 원본 풀과 학습 목록 모두 완벽하게 무작위 셔플 후 첫 단어부터 시작
+        shuffleArray(allDictionaryWords);
+        words = [...allDictionaryWords];
+        shuffleArray(words);
+        currentIndex = 0;
+        isRevealed = false;
+        showToast(`3,000+ 미국 실전 회화 단어장 가동 (${words.length}개 준비됨)`);
+        fetchMoreDictionaryWords();
+      } else if (mode === 'search') {
+        openSearch();
+        return;
+      } else {
+        studyMode = mode;
+        if (words !== sheetWords && sheetWords.length > 0) {
+          words = [...sheetWords];
+          shuffleArray(words);
+          currentIndex = 0;
+        }
+      }
+
+      if (modeRandom) modeRandom.className = studyMode === 'random' ? activeClass : inactiveClass;
+      if (modeEnToKo) modeEnToKo.className = studyMode === 'enToKo' ? activeClass : inactiveClass;
+      if (modeKoToEn) modeKoToEn.className = studyMode === 'koToEn' ? activeClass : inactiveClass;
+      if (modeAll) modeAll.className = studyMode === 'all' ? activeClass : inactiveClass;
+      if (modeSearch) modeSearch.className = inactiveClass;
 
       renderCard(true);
     }
 
-    modeEnToKo.addEventListener('click', () => setStudyMode('enToKo'));
-    modeKoToEn.addEventListener('click', () => setStudyMode('koToEn'));
-    modeRandom.addEventListener('click', () => setStudyMode('random'));
+    if (modeEnToKo) modeEnToKo.addEventListener('click', () => setStudyMode('enToKo'));
+    if (modeKoToEn) modeKoToEn.addEventListener('click', () => setStudyMode('koToEn'));
+    if (modeRandom) modeRandom.addEventListener('click', () => setStudyMode('random'));
+    if (modeAll) modeAll.addEventListener('click', () => setStudyMode('all'));
+    if (modeSearch) modeSearch.addEventListener('click', () => setStudyMode('search'));
+
+    async function fetchMoreDictionaryWords() {
+      // 3,000개 이상으로 단어장을 무한 확장하여 중복을 원천 차단
+      if (allDictionaryWords.length >= 3500) return;
+
+      try {
+        const apiKey = "";
+        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+        const prompt = `Generate 30 authentic, practical, modern American conversational English expressions, phrasal verbs, idioms, and colloquial collocations used constantly by native speakers in everyday conversations, work catch-ups, and casual dialogues. Return a JSON array with objects containing 'english', 'korean' (natural modern Korean definition), and 'example' (one authentic conversational sentence). Ensure absolute realism and zero textbook archaism.`;
+
+        const res = await fetch(apiUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: prompt }] }],
+            generationConfig: {
+              responseMimeType: "application/json",
+              responseSchema: {
+                type: "ARRAY",
+                items: {
+                  type: "OBJECT",
+                  properties: {
+                    "english": { "type": "STRING" },
+                    "korean": { "type": "STRING" },
+                    "example": { "type": "STRING" }
+                  },
+                  required: ["english", "korean", "example"]
+                }
+              }
+            }
+          })
+        });
+
+        const data = await res.json();
+        const jsonStr = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+        if (jsonStr) {
+          const list = JSON.parse(jsonStr);
+          list.forEach(item => {
+            if (!allDictionaryWords.some(w => w.english.toLowerCase() === item.english.toLowerCase())) {
+              allDictionaryWords.push(item);
+              if (studyMode === 'all' && !words.some(w => w.english.toLowerCase() === item.english.toLowerCase())) {
+                words.push(item);
+              }
+            }
+          });
+          if (studyMode === 'all') {
+            progressBar.style.width = `${((currentIndex + 1) / words.length) * 100}%`;
+            progressText.textContent = `${currentIndex + 1} / ${words.length}`;
+            totalWordCountBadge.textContent = words.length;
+          }
+        }
+      } catch (err) {}
+    }
 
     // Keyboard navigation (for tablets & desktop)
     window.addEventListener('keydown', (e) => {
@@ -938,27 +1235,360 @@
       await loadSheetData(currentSheetUrl);
     });
 
+    // --- Search Modal & Dictionary Logic ---
+    function openSearch() {
+      if (!searchModal) return;
+      searchModal.classList.remove('hidden');
+      if (dictSearchInput) {
+        dictSearchInput.focus();
+        if (dictSearchInput.value.trim()) {
+          handleDictInputChange();
+        }
+      }
+    }
+
+    function closeSearch() {
+      if (searchModal) searchModal.classList.add('hidden');
+    }
+
+    if (openSearchBtn) openSearchBtn.addEventListener('click', openSearch);
+    if (closeSearchModalBtn) closeSearchModalBtn.addEventListener('click', closeSearch);
+    if (searchModal) {
+      searchModal.addEventListener('click', (e) => {
+        if (e.target === searchModal) closeSearch();
+      });
+    }
+
+    if (dictSearchInput) {
+      dictSearchInput.addEventListener('input', handleDictInputChange);
+      dictSearchInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          executeDictionarySearch();
+        }
+      });
+    }
+
+    if (clearDictSearchBtn) {
+      clearDictSearchBtn.addEventListener('click', () => {
+        if (dictSearchInput) dictSearchInput.value = '';
+        clearDictSearchBtn.classList.add('hidden');
+        if (searchSuggestionsBox) searchSuggestionsBox.classList.add('hidden');
+        if (searchResultDetail) searchResultDetail.classList.add('hidden');
+        if (searchEmptyPlaceholder) searchEmptyPlaceholder.classList.remove('hidden');
+        if (dictSearchInput) dictSearchInput.focus();
+      });
+    }
+
+    if (execSearchBtn) execSearchBtn.addEventListener('click', executeDictionarySearch);
+
+    function addWordToAllDatabase(newItem) {
+      if (!newItem || !newItem.english || newItem.english === '-' || newItem.english.trim() === '') return false;
+      const cleanEng = newItem.english.trim();
+      const exists = allDictionaryWords.some(w => w.english.toLowerCase() === cleanEng.toLowerCase());
+      
+      // AI 추천 예문 캐시에도 즉시 저장
+      const exEn = newItem.example || newItem.aiExample || '';
+      const exKo = newItem.nativeMeaning || newItem.korean || '';
+      if (exEn) {
+        aiExampleCache.set(cleanEng, { en: exEn, ko: exKo });
+      }
+
+      if (!exists) {
+        const newEntry = {
+          english: cleanEng,
+          korean: (newItem.korean || '').trim(),
+          example: exEn
+        };
+        allDictionaryWords.push(newEntry);
+
+        // 현재 All 모드 학습 중이라면 현재 학습 목록에도 즉시 추가
+        if (studyMode === 'all') {
+          if (!words.some(w => w.english.toLowerCase() === cleanEng.toLowerCase())) {
+            words.push(newEntry);
+            if (progressBar && progressText && totalWordCountBadge) {
+              progressBar.style.width = `${((currentIndex + 1) / words.length) * 100}%`;
+              progressText.textContent = `${currentIndex + 1} / ${words.length}`;
+              totalWordCountBadge.textContent = words.length;
+            }
+          }
+        }
+        return true;
+      }
+      return false;
+    }
+
+    function handleDictInputChange() {
+      const query = dictSearchInput.value.trim().toLowerCase();
+      if (!query) {
+        clearDictSearchBtn.classList.add('hidden');
+        searchSuggestionsBox.classList.add('hidden');
+        if (!activeSearchResult) {
+          searchEmptyPlaceholder.classList.remove('hidden');
+          searchResultDetail.classList.add('hidden');
+        }
+        return;
+      }
+
+      clearDictSearchBtn.classList.remove('hidden');
+
+      // Filter sheet matches
+      const matches = words
+        .map((w, index) => ({ ...w, sheetIndex: index }))
+        .filter(w => w.english.toLowerCase().includes(query) || w.korean.toLowerCase().includes(query))
+        .slice(0, 5);
+
+      if (matches.length > 0) {
+        searchSuggestionsBox.classList.remove('hidden');
+        suggestionsList.innerHTML = '';
+        matches.forEach(item => {
+          const row = document.createElement('div');
+          row.className = "p-2 rounded-xl bg-zinc-50 hover:bg-red-50 border border-zinc-200/80 cursor-pointer flex items-center justify-between transition";
+          row.innerHTML = `
+            <div class="min-w-0 flex-1 pr-2">
+              <span class="text-xs font-bold text-zinc-900">${item.english}</span>
+              <span class="text-[11px] text-zinc-500 truncate ml-1.5">${item.korean}</span>
+            </div>
+            <i class="fa-solid fa-arrow-right text-[10px] text-zinc-400"></i>
+          `;
+          row.addEventListener('click', () => {
+            displaySearchResultFromSheet(item);
+          });
+          suggestionsList.appendChild(row);
+        });
+      } else {
+        searchSuggestionsBox.classList.add('hidden');
+      }
+    }
+
+    async function executeDictionarySearch() {
+      const query = dictSearchInput.value.trim();
+      if (!query) return;
+
+      const lower = query.toLowerCase();
+      const exactSheetMatch = words.find(w => w.english.toLowerCase() === lower || w.korean.toLowerCase() === lower);
+
+      if (exactSheetMatch) {
+        displaySearchResultFromSheet({
+          ...exactSheetMatch,
+          sheetIndex: words.indexOf(exactSheetMatch)
+        });
+        return;
+      }
+
+      // If partial match in sheet, show first match
+      const partialSheetMatch = words.find(w => w.english.toLowerCase().includes(lower) || w.korean.toLowerCase().includes(lower));
+      if (partialSheetMatch) {
+        displaySearchResultFromSheet({
+          ...partialSheetMatch,
+          sheetIndex: words.indexOf(partialSheetMatch)
+        });
+        return;
+      }
+
+      // If not in sheet, perform live AI dictionary lookup
+      await lookupWordViaAi(query);
+    }
+
+    async function displaySearchResultFromSheet(item) {
+      searchEmptyPlaceholder.classList.add('hidden');
+      searchSuggestionsBox.classList.add('hidden');
+      searchResultDetail.classList.remove('hidden');
+
+      activeSearchResult = {
+        english: item.english,
+        korean: item.korean,
+        sheetExample: item.example,
+        sheetIndex: item.sheetIndex
+      };
+
+      addWordToAllDatabase({
+        english: item.english,
+        korean: item.korean,
+        example: item.example
+      });
+
+      resultWord.textContent = item.english;
+      resultPhonetic.classList.add('hidden');
+      resultMeaning.textContent = item.korean;
+      resultSourceBadge.textContent = "시트 단어";
+      resultSourceBadge.className = "text-[10px] font-bold px-2 py-0.5 rounded-full bg-red-50 text-red-600 border border-red-200 shrink-0";
+
+      // Jump to card option
+      if (typeof item.sheetIndex === 'number') {
+        jumpToCardBox.classList.remove('hidden');
+        jumpToCardBtn.onclick = () => {
+          currentIndex = item.sheetIndex;
+          renderCard(true);
+          closeSearch();
+          showToast(`'${item.english}' 카드로 이동했습니다.`);
+        };
+      } else {
+        jumpToCardBox.classList.add('hidden');
+      }
+
+      // Sheet example
+      if (item.example && item.example !== "등록된 예문이 없습니다.") {
+        resultSheetExampleBox.classList.remove('hidden');
+        resultSheetExample.textContent = item.example;
+      } else {
+        resultSheetExampleBox.classList.add('hidden');
+      }
+
+      // Fetch or use cached AI native example
+      const cacheKey = item.english;
+      if (aiExampleCache.has(cacheKey)) {
+        const cached = aiExampleCache.get(cacheKey);
+        resultAiExample.textContent = cached.en;
+        resultAiMeaning.textContent = cached.ko;
+      } else {
+        resultAiExample.textContent = "원어민 실전 빈출 표현 불러오는 중...";
+        resultAiMeaning.textContent = "";
+        loadCompanionAiExample(item).then(() => {
+          const loaded = aiExampleCache.get(cacheKey);
+          if (loaded) {
+            resultAiExample.textContent = loaded.en;
+            resultAiMeaning.textContent = loaded.ko;
+          }
+        });
+      }
+    }
+
+    async function lookupWordViaAi(query) {
+      searchEmptyPlaceholder.classList.add('hidden');
+      searchSuggestionsBox.classList.add('hidden');
+      searchResultDetail.classList.remove('hidden');
+
+      resultWord.textContent = query;
+      resultPhonetic.classList.add('hidden');
+      resultMeaning.textContent = "뜻과 예문을 검색하는 중...";
+      resultSourceBadge.textContent = "사전 검색";
+      resultSourceBadge.className = "text-[10px] font-bold px-2 py-0.5 rounded-full bg-zinc-100 text-zinc-600 border border-zinc-200 shrink-0";
+      jumpToCardBox.classList.add('hidden');
+      resultSheetExampleBox.classList.add('hidden');
+      resultAiExample.textContent = "원어민 표현 생성 중...";
+      resultAiMeaning.textContent = "";
+
+      try {
+        const apiKey = "";
+        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+        
+        const systemPrompt = "You are a bilingual English-Korean dictionary and linguistic coach. For the searched keyword (English word or Korean expression), provide the canonical English headword, natural core Korean meanings, and one high-frequency modern native conversational sentence with its natural Korean translation.";
+        const userPrompt = `Search Query: "${query}". Provide JSON with properties: "headword" (canonical English word/phrase), "meaning" (clear Korean definition), "nativeExample" (practical conversational sentence), "nativeMeaning" (Korean translation of example).`;
+
+        const response = await fetch(apiUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: userPrompt }] }],
+            systemInstruction: { parts: [{ text: systemPrompt }] },
+            generationConfig: {
+              responseMimeType: "application/json",
+              responseSchema: {
+                type: "OBJECT",
+                properties: {
+                  "headword": { "type": "STRING" },
+                  "meaning": { "type": "STRING" },
+                  "nativeExample": { "type": "STRING" },
+                  "nativeMeaning": { "type": "STRING" }
+                },
+                required: ["headword", "meaning", "nativeExample", "nativeMeaning"]
+              }
+            }
+          })
+        });
+
+        const result = await response.json();
+        const jsonText = result?.candidates?.[0]?.content?.parts?.[0]?.text;
+        if (jsonText) {
+          const parsed = JSON.parse(jsonText);
+          activeSearchResult = {
+            english: parsed.headword,
+            korean: parsed.meaning,
+            aiExample: parsed.nativeExample
+          };
+
+          resultWord.textContent = parsed.headword;
+          resultMeaning.textContent = parsed.meaning;
+          resultAiExample.textContent = parsed.nativeExample;
+          resultAiMeaning.textContent = parsed.nativeMeaning;
+
+          const isAdded = addWordToAllDatabase({
+            english: parsed.headword,
+            korean: parsed.meaning,
+            example: parsed.nativeExample,
+            nativeMeaning: parsed.nativeMeaning
+          });
+
+          if (isAdded) {
+            showToast(`'${parsed.headword}'이(가) All 단어장에 추가되었습니다.`);
+          }
+        } else {
+          throw new Error();
+        }
+      } catch (err) {
+        resultMeaning.textContent = "검색 결과를 불러오지 못했습니다.";
+        resultAiExample.textContent = "네트워크 연결을 확인한 뒤 다시 시도해주세요.";
+        resultAiMeaning.textContent = "";
+      }
+    }
+
+    // Pronunciation buttons inside Search Modal (1.1x US Female Voice)
+    if (speakResultWordBtn) {
+      speakResultWordBtn.addEventListener('click', () => {
+        const text = resultWord ? resultWord.textContent : '';
+        if (text && text !== '-') {
+          speakText(text, 'en-US');
+        }
+      });
+    }
+
+    if (speakResultSheetExBtn) {
+      speakResultSheetExBtn.addEventListener('click', () => {
+        const text = resultSheetExample ? resultSheetExample.textContent : '';
+        if (text && text !== '-') {
+          speakText(text, 'en-US');
+        }
+      });
+    }
+
+    if (speakResultAiExBtn) {
+      speakResultAiExBtn.addEventListener('click', () => {
+        const text = resultAiExample ? resultAiExample.textContent : '';
+        if (text && text !== '-') {
+          speakText(text, 'en-US');
+        }
+      });
+    }
+
     async function loadSheetData(url) {
       try {
         const fetchedWords = await fetchGoogleSheetWords(url);
-        words = fetchedWords;
-        shuffleArray(words);
-        currentIndex = 0;
-        updateSyncStatus("success", `연동됨 (${words.length}개)`);
-        renderCard(true);
-        showToast(`${words.length}개 단어가 준비되었습니다.`);
+        sheetWords = fetchedWords;
+        if (studyMode !== 'all') {
+          words = sheetWords;
+          shuffleArray(words);
+          currentIndex = 0;
+          renderCard(true);
+        }
+        updateSyncStatus("success", `연동됨 (${sheetWords.length}개)`);
+        showToast(`${sheetWords.length}개 시트 단어 준비 완료`);
       } catch (err) {
         updateSyncStatus("error", "권한 확인 필요");
         showToast("시트 접근 권한 확인 필요 (기본 단어장 실행)", true);
-        words = [...FALLBACK_WORDS];
-        shuffleArray(words);
-        currentIndex = 0;
-        renderCard(true);
+        sheetWords = [...FALLBACK_WORDS];
+        if (studyMode !== 'all') {
+          words = sheetWords;
+          shuffleArray(words);
+          currentIndex = 0;
+          renderCard(true);
+        }
       }
     }
 
     window.addEventListener('load', () => {
       shuffleArray(words);
+      shuffleArray(allDictionaryWords);
       sheetUrlInput.value = currentSheetUrl;
       loadSheetData(currentSheetUrl);
     });
