@@ -211,6 +211,21 @@
             <p id="exampleContent" class="text-xs sm:text-sm font-medium text-zinc-700 leading-relaxed italic">
               -
             </p>
+            <div id="sheetMeaningContainer" class="mt-2.5 pt-2 border-t border-zinc-200/80 flex flex-col items-start gap-1.5">
+              <button id="toggleSheetMeaningBtn" type="button" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-white border border-zinc-300 text-zinc-700 hover:bg-zinc-100 active:scale-95 text-xs font-bold transition shadow-xs">
+                <i class="fa-solid fa-language text-xs"></i>
+                <span id="toggleSheetMeaningText">해석</span>
+              </button>
+              <div id="sheetExampleMeaningBox" class="w-full mt-1 bg-white/95 border border-zinc-200/90 rounded-xl p-2.5 shadow-2xs hidden">
+                <p class="text-[10px] font-bold text-zinc-500 mb-0.5 flex items-center gap-1">
+                  <i class="fa-solid fa-check text-[9px]"></i>
+                  시트 예문 한국어 해석
+                </p>
+                <p id="sheetExampleMeaning" class="text-xs sm:text-sm font-semibold text-zinc-800 leading-relaxed">
+                  -
+                </p>
+              </div>
+            </div>
           </div>
 
           <!-- AI Companion Generated Example Box -->
@@ -648,6 +663,12 @@
     const speakAnswerBtn = document.getElementById('speakAnswerBtn');
     const speakExampleBtn = document.getElementById('speakExampleBtn');
 
+    const sheetMeaningContainer = document.getElementById('sheetMeaningContainer');
+    const toggleSheetMeaningBtn = document.getElementById('toggleSheetMeaningBtn');
+    const toggleSheetMeaningText = document.getElementById('toggleSheetMeaningText');
+    const sheetExampleMeaningBox = document.getElementById('sheetExampleMeaningBox');
+    const sheetExampleMeaning = document.getElementById('sheetExampleMeaning');
+
     const aiExampleBox = document.getElementById('aiExampleBox');
     const aiExampleContent = document.getElementById('aiExampleContent');
     const aiMeaningContainer = document.getElementById('aiMeaningContainer');
@@ -823,12 +844,14 @@
         const english = (row[0] || "").trim();
         const korean = (row[1] || "").trim();
         const example = (row[2] || "").trim();
+        const exampleKo = (row[3] || "").trim();
 
         if (english || korean) {
           parsed.push({
             english: english || "-",
             korean: korean || "-",
-            example: example || "등록된 예문이 없습니다."
+            example: example || "등록된 예문이 없습니다.",
+            exampleKo: exampleKo || ""
           });
         }
       }
@@ -1025,6 +1048,8 @@ Create a completely different high-frequency, natural conversational sentence. R
       // 카드 전환 시 해석 박스 접기 리셋
       if (aiExampleMeaningBox) aiExampleMeaningBox.classList.add('hidden');
       if (toggleAiMeaningText) toggleAiMeaningText.textContent = "해석";
+      if (sheetExampleMeaningBox) sheetExampleMeaningBox.classList.add('hidden');
+      if (toggleSheetMeaningText) toggleSheetMeaningText.textContent = "해석";
 
       const item = words[currentIndex];
       currentActiveItem = item;
@@ -1053,6 +1078,13 @@ Create a completely different high-frequency, natural conversational sentence. R
       }
 
       exampleContent.textContent = item.example;
+      if (sheetMeaningContainer) {
+        if (!item.example || item.example === "등록된 예문이 없습니다.") {
+          sheetMeaningContainer.classList.add('hidden');
+        } else {
+          sheetMeaningContainer.classList.remove('hidden');
+        }
+      }
 
       if (isRevealed) {
         answerSection.classList.remove('hidden');
@@ -1278,6 +1310,37 @@ Create a completely different high-frequency, natural conversational sentence. R
     if (speakAnswerBtn) speakAnswerBtn.addEventListener('click', speakCurrentWord);
     if (speakExampleBtn) speakExampleBtn.addEventListener('click', speakCurrentExample);
     if (speakAiExampleBtn) speakAiExampleBtn.addEventListener('click', speakCompanionExample);
+
+    if (toggleSheetMeaningBtn) {
+      toggleSheetMeaningBtn.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        if (!sheetExampleMeaningBox) return;
+
+        const isHidden = sheetExampleMeaningBox.classList.contains('hidden');
+        if (isHidden) {
+          const sentenceAbove = exampleContent ? exampleContent.textContent.trim() : '';
+          if (!sentenceAbove || sentenceAbove === '-' || sentenceAbove === "등록된 예문이 없습니다.") return;
+
+          let meaning = currentActiveItem?.exampleKo ? currentActiveItem.exampleKo.trim() : '';
+
+          if (!meaning) {
+            sheetExampleMeaning.textContent = "시트 예문 번역 중...";
+            sheetExampleMeaningBox.classList.remove('hidden');
+            meaning = await translateSentence(sentenceAbove);
+            if (currentActiveItem) {
+              currentActiveItem.exampleKo = meaning;
+            }
+          }
+
+          sheetExampleMeaning.textContent = meaning || "해석을 불러올 수 없습니다.";
+          sheetExampleMeaningBox.classList.remove('hidden');
+          if (toggleSheetMeaningText) toggleSheetMeaningText.textContent = "해석 닫기";
+        } else {
+          sheetExampleMeaningBox.classList.add('hidden');
+          if (toggleSheetMeaningText) toggleSheetMeaningText.textContent = "해석";
+        }
+      });
+    }
 
     if (toggleAiMeaningBtn) {
       toggleAiMeaningBtn.addEventListener('click', async (e) => {
