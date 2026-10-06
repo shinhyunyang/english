@@ -227,9 +227,21 @@
             <p id="aiExampleContent" class="text-xs sm:text-sm font-medium text-zinc-800 leading-relaxed">
               -
             </p>
-            <p id="aiExampleMeaning" class="text-[11px] text-zinc-500 mt-1 font-normal">
-              -
-            </p>
+            <div id="aiMeaningContainer" class="mt-2.5 pt-2 border-t border-rose-100/80 flex flex-col items-start gap-1.5">
+              <button id="toggleAiMeaningBtn" type="button" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-white border border-rose-200 text-rose-600 hover:bg-rose-50 active:scale-95 text-xs font-bold transition shadow-xs">
+                <i class="fa-solid fa-language text-xs"></i>
+                <span id="toggleAiMeaningText">해석</span>
+              </button>
+              <div id="aiExampleMeaningBox" class="w-full mt-1 bg-white/95 border border-rose-200/90 rounded-xl p-2.5 shadow-2xs hidden">
+                <p class="text-[10px] font-bold text-rose-500 mb-0.5 flex items-center gap-1">
+                  <i class="fa-solid fa-check text-[9px]"></i>
+                  윗문장 한국어 해석
+                </p>
+                <p id="aiExampleMeaning" class="text-xs sm:text-sm font-semibold text-zinc-800 leading-relaxed">
+                  -
+                </p>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -441,41 +453,41 @@
     let currentSheetUrl = DEFAULT_SHEET_URL;
 
     const FALLBACK_WORDS = [
-      { english: "meticulous", korean: "세심한, 꼼꼼한", example: "He was meticulous about keeping his desk tidy." },
-      { english: "resilience", korean: "회복력, 탄력성", example: "The team showed great resilience in overcoming defeat." },
-      { english: "ubiquitous", korean: "어디에나 존재하는", example: "Smartphones have become ubiquitous in daily life." },
-      { english: "ephemeral", korean: "일시적인, 덧없는", example: "Fashions are ephemeral, but true style lasts." },
-      { english: "lucid", korean: "명쾌한, 명료한", example: "She gave a remarkably lucid explanation of the concept." },
-      { english: "pragmatic", korean: "실용적인, 현실적인", example: "We need a pragmatic solution rather than high ideals." },
-      { english: "scrutinize", korean: "면밀히 조사하다", example: "The committee scrutinized every clause of the contract." },
-      { english: "vulnerable", korean: "취약한, 상처받기 쉬운", example: "Old people are especially vulnerable to the flu." }
+      { english: "meticulous", korean: "세심한, 꼼꼼한", example: "He was meticulous about keeping his desk tidy.", exampleKo: "그는 책상을 깔끔하게 정리하는 데 매우 꼼꼼했습니다." },
+      { english: "resilience", korean: "회복력, 탄력성", example: "The team showed great resilience in overcoming defeat.", exampleKo: "그 팀은 패배를 극복하는 과정에서 엄청난 회복력을 보여주었습니다." },
+      { english: "ubiquitous", korean: "어디에나 존재하는", example: "Smartphones have become ubiquitous in daily life.", exampleKo: "스마트폰은 일상생활 어디에나 존재하는 것이 되었습니다." },
+      { english: "ephemeral", korean: "일시적인, 덧없는", example: "Fashions are ephemeral, but true style lasts.", exampleKo: "유행은 일시적이지만, 진정한 스타일은 영원합니다." },
+      { english: "lucid", korean: "명쾌한, 명료한", example: "She gave a remarkably lucid explanation of the concept.", exampleKo: "그녀는 그 개념에 대해 놀라울 정도로 명쾌하게 설명해 주었습니다." },
+      { english: "pragmatic", korean: "실용적인, 현실적인", example: "We need a pragmatic solution rather than high ideals.", exampleKo: "우리는 거창한 이상보다 현실적이고 실용적인 해결책이 필요합니다." },
+      { english: "scrutinize", korean: "면밀히 조사하다", example: "The committee scrutinized every clause of the contract.", exampleKo: "위원회는 계약서의 모든 조항을 면밀하게 검토했습니다." },
+      { english: "vulnerable", korean: "취약한, 상처받기 쉬운", example: "Old people are especially vulnerable to the flu.", exampleKo: "어르신들은 특히 독감에 취약합니다." }
     ];
 
     let words = [...FALLBACK_WORDS];
     let sheetWords = [...FALLBACK_WORDS];
     let allDictionaryWords = [
-      { english: "figure out", korean: "알아내다, 방법을 찾아내다", example: "Give me a minute to figure out how this works." },
-      { english: "touch base", korean: "간단히 상황을 공유하다, 연락하다", example: "Let's touch base next Monday before the team meeting." },
-      { english: "make sense", korean: "이해가 되다, 말이 되다", example: "That totally makes sense, thanks for explaining." },
-      { english: "wrap up", korean: "마무리 짓다, 끝내다", example: "We should wrap up this meeting in five minutes." },
-      { english: "on the fence", korean: "결정을 못 내리고 망설이는", example: "I'm still on the fence about moving to New York." },
-      { english: "catch up", korean: "밀린 대화를 나누다, 따라잡다", example: "We haven't seen each other in ages, let's grab coffee and catch up." },
-      { english: "play it by ear", korean: "상황 봐서 즉흥적으로 결정하다", example: "We don't have a fixed plan for tomorrow, let's just play it by ear." },
-      { english: "call it a day", korean: "오늘 일/공부를 마무리하다", example: "It's already 7 PM, let's call it a day and head home." },
-      { english: "out of the blue", korean: "갑자기, 뜬금없이, 난데없이", example: "She texted me out of the blue after three years." },
-      { english: "run into", korean: "우연히 마주치다", example: "Guess who I ran into at the grocery store today?" },
-      { english: "overwhelmed", korean: "벅찬, 정신없이 압도된", example: "I felt a bit overwhelmed with so many tasks at once." },
-      { english: "worth it", korean: "그만한 가치가 있는, 보람 있는", example: "The hike was exhausting, but the view was totally worth it." },
-      { english: "second thoughts", korean: "다시 생각해보니 드는 의구심/재고", example: "Are you having second thoughts about taking the new job?" },
-      { english: "take for granted", korean: "당연하게 여기다", example: "Don't take your health for granted; get some rest." },
-      { english: "relatable", korean: "누구나 공감할 수 있는, 친근한", example: "Her stories on Instagram are so honest and relatable." },
-      { english: "go with the flow", korean: "흘러가는 대로 두다, 대세를 따르다", example: "Don't stress over little details, just go with the flow." },
-      { english: "straightforward", korean: "복잡하지 않고 직관적인, 솔직한", example: "The application process was super easy and straightforward." },
-      { english: "spontaneous", korean: "즉흥적인, 자연발생적인", example: "We took a spontaneous weekend road trip to the coast." },
-      { english: "procrastinate", korean: "일을 자꾸 미루다", example: "Stop procrastinating and finish your assignment now." },
-      { english: "hang in there", korean: "조금만 더 버텨, 힘내", example: "Things will get better soon, just hang in there!" },
-      { english: "spot on", korean: "정확한, 딱 들어맞는", example: "Your prediction about the game was completely spot on." },
-      { english: "under the weather", korean: "컨디션이 안 좋은, 으슬으슬한", example: "I'm feeling a little under the weather, so I'll stay in tonight." }
+      { english: "figure out", korean: "알아내다, 방법을 찾아내다", example: "Give me a minute to figure out how this works.", exampleKo: "이게 어떻게 작동하는지 알아낼 시간 좀 잠깐만 줘." },
+      { english: "touch base", korean: "간단히 상황을 공유하다, 연락하다", example: "Let's touch base next Monday before the team meeting.", exampleKo: "다음 주 월요일 팀 회의 전에 간단히 상황을 먼저 공유하자." },
+      { english: "make sense", korean: "이해가 되다, 말이 되다", example: "That totally makes sense, thanks for explaining.", exampleKo: "그거 완전 이해되고 말이 되네, 설명해 줘서 고마워." },
+      { english: "wrap up", korean: "마무리 짓다, 끝내다", example: "We should wrap up this meeting in five minutes.", exampleKo: "우리 이 회의 5분 안에 슬슬 마무리해야 해." },
+      { english: "on the fence", korean: "결정을 못 내리고 망설이는", example: "I'm still on the fence about moving to New York.", exampleKo: "나 뉴욕으로 이사 가는 거에 대해 아직도 망설이고 있어." },
+      { english: "catch up", korean: "밀린 대화를 나누다, 따라잡다", example: "We haven't seen each other in ages, let's grab coffee and catch up.", exampleKo: "우리 진짜 오랜만이다, 커피 한잔 마시면서 밀린 이야기나 나누자." },
+      { english: "play it by ear", korean: "상황 봐서 즉흥적으로 결정하다", example: "We don't have a fixed plan for tomorrow, let's just play it by ear.", exampleKo: "내일 정해진 계획은 없으니까, 그냥 상황 봐서 즉흥적으로 결정하자." },
+      { english: "call it a day", korean: "오늘 일/공부를 마무리하다", example: "It's already 7 PM, let's call it a day and head home.", exampleKo: "벌써 저녁 7시네, 오늘 일은 여기서 마무리하고 퇴근하자." },
+      { english: "out of the blue", korean: "갑자기, 뜬금없이, 난데없이", example: "She texted me out of the blue after three years.", exampleKo: "그녀가 3년 만에 난데없이 뜬금없이 나한테 문자를 보냈어." },
+      { english: "run into", korean: "우연히 마주치다", example: "Guess who I ran into at the grocery store today?", exampleKo: "나 오늘 마트에서 누구랑 우연히 마주쳤는지 맞춰봐." },
+      { english: "overwhelmed", korean: "벅찬, 정신없이 압도된", example: "I felt a bit overwhelmed with so many tasks at once.", exampleKo: "한꺼번에 너무 많은 일이 몰려서 정신없이 압도당하는 기분이었어." },
+      { english: "worth it", korean: "그만한 가치가 있는, 보람 있는", example: "The hike was exhausting, but the view was totally worth it.", exampleKo: "등산은 정말 힘들었지만, 경치는 그 고생을 할 만한 가치가 충분했어." },
+      { english: "second thoughts", korean: "다시 생각해보니 드는 의구심/재고", example: "Are you having second thoughts about taking the new job?", exampleKo: "새 직장으로 가는 것에 대해 다시 생각해보니 의구심이 드니?" },
+      { english: "take for granted", korean: "당연하게 여기다", example: "Don't take your health for granted; get some rest.", exampleKo: "건강을 당연하게 여기지 말고, 휴식을 좀 취해." },
+      { english: "relatable", korean: "누구나 공감할 수 있는, 친근한", example: "Her stories on Instagram are so honest and relatable.", exampleKo: "인스타그램에 올라온 그녀의 이야기들은 너무 솔직해서 누구나 공감할 수 있어." },
+      { english: "go with the flow", korean: "흘러가는 대로 두다, 대세를 따르다", example: "Don't stress over little details, just go with the flow.", exampleKo: "작은 일에 스트레스받지 말고, 그냥 흘러가는 대로 둬." },
+      { english: "straightforward", korean: "복잡하지 않고 직관적인, 솔직한", example: "The application process was super easy and straightforward.", exampleKo: "지원 절차는 정말 쉽고 매우 직관적이었어." },
+      { english: "spontaneous", korean: "즉흥적인, 자연발생적인", example: "We took a spontaneous weekend road trip to the coast.", exampleKo: "우리는 주말에 즉흥적으로 해안가로 드라이브 여행을 떠났어." },
+      { english: "procrastinate", korean: "일을 자꾸 미루다", example: "Stop procrastinating and finish your assignment now.", exampleKo: "자꾸 일 미루지 말고 지금 당장 과제부터 끝내." },
+      { english: "hang in there", korean: "조금만 더 버텨, 힘내", example: "Things will get better soon, just hang in there!", exampleKo: "곧 다 괜찮아질 테니까, 조금만 더 힘내고 버텨봐!" },
+      { english: "spot on", korean: "정확한, 딱 들어맞는", example: "Your prediction about the game was completely spot on.", exampleKo: "그 경기에 대한 네 예측은 완벽하게 딱 들어맞았어." },
+      { english: "under the weather", korean: "컨디션이 안 좋은, 으슬으슬한", example: "I'm feeling a little under the weather, so I'll stay in tonight.", exampleKo: "오늘 몸이 좀 으슬으슬 컨디션이 안 좋아서 밤에는 집에 있으려고 해." }
     ];
     let currentIndex = 0;
     let isRevealed = false;
@@ -498,7 +510,11 @@
 
     const aiExampleBox = document.getElementById('aiExampleBox');
     const aiExampleContent = document.getElementById('aiExampleContent');
+    const aiMeaningContainer = document.getElementById('aiMeaningContainer');
+    const aiExampleMeaningBox = document.getElementById('aiExampleMeaningBox');
     const aiExampleMeaning = document.getElementById('aiExampleMeaning');
+    const toggleAiMeaningBtn = document.getElementById('toggleAiMeaningBtn');
+    const toggleAiMeaningText = document.getElementById('toggleAiMeaningText');
     const speakAiExampleBtn = document.getElementById('speakAiExampleBtn');
 
     const revealBtn = document.getElementById('revealBtn');
@@ -720,28 +736,48 @@
       }
     }
 
+    async function translateSentence(sentence) {
+      if (!sentence || sentence === '-' || sentence.trim() === '') return "";
+      try {
+        const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=ko&dt=t&q=${encodeURIComponent(sentence.trim())}`;
+        const res = await fetch(url);
+        if (res.ok) {
+          const json = await res.json();
+          if (json && json[0]) {
+            return json[0].map(item => item[0]).join('').trim();
+          }
+        }
+      } catch (err) {}
+      return currentActiveItem?.korean ? `(${currentActiveItem.korean})` : "";
+    }
+
     // AI 예문 1문장 생성 및 캐싱 (안전 파싱 및 즉각 Fallback 지원)
     async function loadCompanionAiExample(wordItem) {
       if (!wordItem || !wordItem.english || wordItem.english === '-') return;
       const cleanKey = wordItem.english.trim().toLowerCase();
 
-      // 1. 이미 캐시된 예문이 있으면 즉시 표시
+      // 1. 이미 캐시된 예문이 있으면 문장과 버튼을 즉시 동시에 표시
       if (aiExampleCache.has(cleanKey)) {
         displayAiExample(aiExampleCache.get(cleanKey));
         return;
       }
 
-      // 2. 단어 자체에 이미 좋은 실전 예문이 있는 경우(All 사전 등), 로딩 대기 없이 즉시 임시 표시
+      // 2. 단어 자체에 이미 좋은 실전 예문과 번역이 있는 경우 즉시 표시
       if (wordItem.example && wordItem.example !== "등록된 예문이 없습니다.") {
         const initialExample = {
           en: wordItem.example,
-          ko: wordItem.exampleKo || ""
+          ko: wordItem.exampleKo || await translateSentence(wordItem.example)
         };
+        aiExampleCache.set(cleanKey, initialExample);
         displayAiExample(initialExample);
-      } else {
-        aiExampleContent.textContent = "원어민 실전 활용 예문 생성 중...";
-        aiExampleMeaning.textContent = "";
+        return;
       }
+
+      // 3. 새로 생성해야 하는 경우 로딩 상태 표시
+      aiExampleContent.textContent = "원어민 실전 활용 예문 생성 중...";
+      if (aiExampleMeaning) aiExampleMeaning.textContent = "";
+      if (aiExampleMeaningBox) aiExampleMeaningBox.classList.add('hidden');
+      if (toggleAiMeaningText) toggleAiMeaningText.textContent = "해석";
 
       try {
         const apiKey = "";
@@ -782,6 +818,9 @@ Create one high-frequency, natural conversational sentence showcasing how native
             en: parsed.en || parsed.english || wordItem.example || `Let's use "${wordItem.english}" in our conversation today.`, 
             ko: (parsed.ko || parsed.korean || wordItem.exampleKo || "").replace(/\s*\(.*?쓰임새.*?\)\s*/g, '').trim()
           };
+          if (!data.ko) {
+            data.ko = await translateSentence(data.en);
+          }
           aiExampleCache.set(cleanKey, data);
           if (currentActiveItem && currentActiveItem.english.trim().toLowerCase() === cleanKey) {
             displayAiExample(data);
@@ -790,14 +829,13 @@ Create one high-frequency, natural conversational sentence showcasing how native
           throw new Error("No candidate returned");
         }
       } catch (e) {
-        // 네트워크 지연이나 제한 시 고품질 실전 회화 템플릿 즉각 적용
         const fallbackSentence = (wordItem.example && wordItem.example !== "등록된 예문이 없습니다.")
           ? wordItem.example
           : `Native speakers often say: "It really helps to ${wordItem.english} whenever you face this situation."`;
         
         const fallback = {
           en: fallbackSentence,
-          ko: wordItem.exampleKo || ""
+          ko: wordItem.exampleKo || await translateSentence(fallbackSentence)
         };
         aiExampleCache.set(cleanKey, fallback);
         if (currentActiveItem && currentActiveItem.english.trim().toLowerCase() === cleanKey) {
@@ -809,13 +847,21 @@ Create one high-frequency, natural conversational sentence showcasing how native
     function displayAiExample(data) {
       if (!data) return;
       aiExampleContent.textContent = data.en || "-";
-      // 괄호 쓰임새 부가 설명 제거 필터링
+      
       const cleanMeaning = (data.ko || "").replace(/\s*\(.*?쓰임새.*?\)\s*/g, '').trim();
-      aiExampleMeaning.textContent = cleanMeaning;
-      if (!cleanMeaning) {
-        aiExampleMeaning.classList.add('hidden');
-      } else {
-        aiExampleMeaning.classList.remove('hidden');
+      if (aiExampleMeaning) {
+        aiExampleMeaning.textContent = cleanMeaning || "해석을 준비하고 있습니다.";
+      }
+      
+      // 문장이 준비된 순간에 [해석] 버튼 컨테이너를 함께 노출 (기본은 접힘 상태)
+      if (aiMeaningContainer) {
+        aiMeaningContainer.classList.remove('hidden');
+      }
+      if (aiExampleMeaningBox) {
+        aiExampleMeaningBox.classList.add('hidden');
+      }
+      if (toggleAiMeaningText) {
+        toggleAiMeaningText.textContent = "해석";
       }
     }
 
@@ -830,31 +876,28 @@ Create one high-frequency, natural conversational sentence showcasing how native
         determineCardMode();
       }
 
+      // 카드 전환 시 해석 박스 접기 리셋
+      if (aiExampleMeaningBox) aiExampleMeaningBox.classList.add('hidden');
+      if (toggleAiMeaningText) toggleAiMeaningText.textContent = "해석";
+
       const item = words[currentIndex];
-      currentActiveItem = item; // 현재 렌더링된 단어를 확정 저장하여 비동기 변경 방지
+      currentActiveItem = item;
       progressText.textContent = `${currentIndex + 1} / ${words.length}`;
       progressBar.style.width = `${((currentIndex + 1) / words.length) * 100}%`;
       totalWordCountBadge.textContent = words.length;
 
-      // 폰트 잔상 및 중복 표기 방지: 텍스트를 깔끔하게 교체
       if (currentCardMode === 'enToKo') {
         promptLabel.textContent = studyMode === 'all' ? "English Expression" : "English Word (A)";
         promptContent.textContent = item.english;
         promptContent.className = "text-2xl sm:text-3xl font-extrabold text-zinc-900 tracking-tight leading-snug py-1";
-
-        // 영어일 때만 윗칸 발음 표시
         speakPromptBtn.classList.remove('hidden');
-
         answerContent.textContent = item.korean;
         speakAnswerBtn.classList.add('hidden');
       } else {
         promptLabel.textContent = "Korean Meaning (B)";
         promptContent.textContent = item.korean;
         promptContent.className = "text-xl sm:text-2xl font-bold text-zinc-900 tracking-tight leading-snug py-1";
-
-        // 한국어일 때 윗칸 발음 제거
         speakPromptBtn.classList.add('hidden');
-
         answerContent.textContent = item.english;
         if (!isRevealed) {
           speakAnswerBtn.classList.add('hidden');
@@ -872,12 +915,10 @@ Create one high-frequency, natural conversational sentence showcasing how native
         revealBtn.className = "flex-1 h-11 px-4 rounded-xl bg-zinc-900 hover:bg-black text-white font-bold text-sm shadow-md active:scale-98 transition flex items-center justify-center gap-1.5";
         
         if (studyMode === 'all') {
-          // All 모드: 시트 예문은 숨기고 원어민 추천 예문만 단독 표시
           if (exampleBox) exampleBox.classList.add('hidden');
           if (aiExampleBox) aiExampleBox.classList.remove('hidden');
           loadCompanionAiExample(item);
         } else {
-          // 일반 시트 모드: 시트 원본 예문과 추가 추천 예문 모두 표시
           if (exampleBox) exampleBox.classList.remove('hidden');
           if (aiExampleBox) aiExampleBox.classList.remove('hidden');
           loadCompanionAiExample(item);
@@ -1091,6 +1132,43 @@ Create one high-frequency, natural conversational sentence showcasing how native
     if (speakAnswerBtn) speakAnswerBtn.addEventListener('click', speakCurrentWord);
     if (speakExampleBtn) speakExampleBtn.addEventListener('click', speakCurrentExample);
     if (speakAiExampleBtn) speakAiExampleBtn.addEventListener('click', speakCompanionExample);
+
+    if (toggleAiMeaningBtn) {
+      toggleAiMeaningBtn.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        if (!aiExampleMeaningBox) return;
+
+        const isHidden = aiExampleMeaningBox.classList.contains('hidden');
+        if (isHidden) {
+          // 바로 윗줄에 표시된 실제 영어 예문 문장 가져오기
+          const sentenceAbove = aiExampleContent ? aiExampleContent.textContent.trim() : '';
+
+          let meaning = aiExampleMeaning ? aiExampleMeaning.textContent.trim() : '';
+          
+          // 비어 있거나 기본 placeholder 상태일 경우 현재 문장 기준으로 번역 보충
+          if (!meaning || meaning === '-' || meaning === '해석을 준비하고 있습니다.') {
+            const cleanKey = currentActiveItem?.english?.trim()?.toLowerCase();
+            const cached = cleanKey ? aiExampleCache.get(cleanKey) : null;
+            if (cached && cached.ko) {
+              meaning = cached.ko;
+            } else if (currentActiveItem?.exampleKo) {
+              meaning = currentActiveItem.exampleKo;
+            } else if (sentenceAbove && sentenceAbove !== '-' && !sentenceAbove.includes('생성 중')) {
+              aiExampleMeaning.textContent = "윗문장 번역 중...";
+              aiExampleMeaningBox.classList.remove('hidden');
+              meaning = await translateSentence(sentenceAbove);
+            }
+          }
+
+          aiExampleMeaning.textContent = meaning || "해석을 불러올 수 없습니다.";
+          aiExampleMeaningBox.classList.remove('hidden');
+          if (toggleAiMeaningText) toggleAiMeaningText.textContent = "해석 닫기";
+        } else {
+          aiExampleMeaningBox.classList.add('hidden');
+          if (toggleAiMeaningText) toggleAiMeaningText.textContent = "해석";
+        }
+      });
+    }
 
     // Sync button
     syncNowBtn.addEventListener('click', async () => {
