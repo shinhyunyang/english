@@ -810,6 +810,8 @@
     let currentIndex = 0;
     let isRevealed = false;
     let currentActiveItem = null;
+    let activeSearchResult = null;
+    let toastTimeout = null;
     let customGeminiApiKey = '';
     try {
       customGeminiApiKey = localStorage.getItem('wordmaster_gemini_key') || '';
@@ -817,6 +819,172 @@
 
     const aiExampleCache = new Map();
     const sentenceTranslationCache = new Map();
+
+    // 상태 표시줄 업데이트
+    function updateSyncStatus(status, text) {
+      const dot = document.getElementById('syncStatusDot');
+      const label = document.getElementById('syncStatusText');
+      if (label) label.textContent = text;
+      if (dot) {
+        dot.className = "w-1.5 h-1.5 rounded-full shrink-0 " + 
+          (status === 'success' ? 'bg-emerald-500' : (status === 'error' ? 'bg-rose-500' : 'bg-amber-400'));
+      }
+    }
+
+    // 토스트 알림 표시
+    function showToast(msg, isError = false) {
+      const toast = document.getElementById('toast');
+      const toastMsg = document.getElementById('toastMsg');
+      const toastIcon = document.getElementById('toastIcon');
+      if (!toast || !toastMsg) return;
+
+      toastMsg.textContent = msg;
+      if (toastIcon) {
+        toastIcon.className = isError 
+          ? "fa-solid fa-triangle-exclamation text-rose-400 text-xs" 
+          : "fa-solid fa-check text-red-400 text-xs";
+      }
+
+      toast.classList.remove('opacity-0', 'pointer-events-none');
+      toast.classList.add('opacity-100');
+
+      if (toastTimeout) clearTimeout(toastTimeout);
+      toastTimeout = setTimeout(() => {
+        toast.classList.remove('opacity-100');
+        toast.classList.add('opacity-0', 'pointer-events-none');
+      }, 2500);
+    }
+
+    // 학습 모드에 따른 카드 방향 결정
+    function determineCardMode() {
+      if (studyMode === 'random') {
+        currentCardMode = Math.random() < 0.5 ? 'enToKo' : 'koToEn';
+      } else if (studyMode === 'enToKo') {
+        currentCardMode = 'enToKo';
+      } else if (studyMode === 'koToEn') {
+        currentCardMode = 'koToEn';
+      } else {
+        currentCardMode = 'enToKo';
+      }
+    }
+
+    // CSV 파서
+    function parseCSV(text) {
+      const p = [];
+      let row = [''];
+      let inQuotes = false;
+      for (let i = 0; i < text.length; i++) {
+        const c = text[i];
+        const next = text[i + 1];
+        if (c === '"') {
+          if (inQuotes && next === '"') {
+            row[row.length - 1] += '"';
+            i++;
+          } else {
+            inQuotes = !inQuotes;
+          }
+        } else if (c === ',' && !inQuotes) {
+          row.push('');
+        } else if ((c === '\r' || c === '\n') && !inQuotes) {
+          if (c === '\r' && next === '\n') i++;
+          if (row.length > 1 || row[0] !== '') {
+            p.push(row);
+          }
+          row = [''];
+        } else {
+          row[row.length - 1] += c;
+        }
+      }
+      if (row.length > 1 || row[0] !== '') {
+        p.push(row);
+      }
+      return p;
+    }
+
+    // 구글 스프레드시트 CSV 데이터 로더
+    async function fetchGoogleSheetWords(url) {
+      let sheetId = "";
+      let gid = "0";
+
+      const idMatch = url.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
+      if (idMatch) sheetId = idMatch[1];
+      const gidMatch = url.match(/[#&?]gid=([0-9]+)/);
+      if (gidMatch) gid = gidMatch[1];
+
+      if (!sheetId) throw new Error("Invalid Google Sheet URL");
+
+      const csvUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv&gid=${gid}`;
+      const res = await fetch(csvUrl);
+      if (!res.ok) throw new Error("Failed to fetch sheet data");
+
+      const text = await res.text();
+      const lines = parseCSV(text);
+      if (!lines || lines.length <= 1) throw new Error("No data in sheet");
+
+      const parsedWords = [];
+      for (let i = 1; i < lines.length; i++) {
+        const row = lines[i];
+        if (!row || row.length === 0) continue;
+        const en = (row[0] || "").trim();
+        const ko = (row[1] || "").trim();
+        const ex = (row[2] || "").trim();
+        const exKo = (row[3] || "").trim();
+
+        if (en && ko) {
+          parsedWords.push({
+            english: en,
+            korean: ko,
+            example: ex || "등록된 예문이 없습니다.",
+            exampleKo: exKo || ""
+          });
+        }
+      }
+
+      if (parsedWords.length === 0) throw new Error("No valid words parsed");
+      return parsedWords;
+    }
+
+    // 영문 문장 실시간 한국어 번역
+    async function translateSentence(sentence) {
+      if (!sentence || sentence === '-' || sentence === "등록된 예문이 없습니다.") return "";
+      const norm = sentence.trim().toLowerCase();
+      if (PREDEFINED_SENTENCE_TRANSLATIONS && PREDEFINED_SENTENCE_TRANSLATIONS[norm]) {
+        return PREDEFINED_SENTENCE_TRANSLATIONS[norm];
+      }
+      if (sentenceTranslationCache.has(norm)) {
+        return sentenceTranslationCache.get(norm);
+      }
+
+      try {
+        const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=ko&dt=t&q=${encodeURIComponent(sentence.trim())}`;
+        const res = await fetch(url);
+        if (res.ok) {
+          const data = await res.json();
+          if (data && data[0]) {
+            const trans = data[0].map(s => s[0]).join('').trim();
+            if (trans) {
+              sentenceTranslationCache.set(norm, trans);
+              return trans;
+            }
+          }
+        }
+      } catch (e) {}
+
+      try {
+        const myMemoryUrl = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(sentence.trim())}&langpair=en|ko`;
+        const res = await fetch(myMemoryUrl);
+        if (res.ok) {
+          const data = await res.json();
+          const trans = data?.responseData?.translatedText?.trim();
+          if (trans && !trans.includes('MYMEMORY WARNING')) {
+            sentenceTranslationCache.set(norm, trans);
+            return trans;
+          }
+        }
+      } catch (e) {}
+
+      return "";
+    }
 
     // --- Predefined Dictionaries for Zero-Delay Fallbacks ---
     const PREDEFINED_SENTENCE_TRANSLATIONS = {
@@ -838,28 +1006,96 @@
       "lucid": { en: "His instructions were so lucid that anyone could follow them.", ko: "그의 지침은 너무나 명쾌해서 누구나 따라 할 수 있었습니다." },
       "pragmatic": { en: "Let's take a pragmatic approach and focus on what works now.", ko: "지금 당장 효과가 있는 것에 집중하는 실용적인 접근 방식을 취합시다." },
       "scrutinize": { en: "The bank will scrutinize your financial records thoroughly.", ko: "은행에서 당신의 금융 기록을 철저하게 조사할 것입니다." },
-      "vulnerable": { en: "Children are often the most vulnerable during harsh winters.", ko: "혹독한 겨울철에는 아이들이 가장 취약해지기 쉽습니다." }
+      "vulnerable": { en: "Children are often the most vulnerable during harsh winters.", ko: "혹독한 겨울철에는 아이들이 가장 취약해지기 쉽습니다." },
+      "perspective": { en: "Traveling abroad gives you a completely different perspective on life.", ko: "해외여행은 삶에 대한 완전히 다른 시각을 선사합니다." },
+      "collaborate": { en: "Teams from marketing and design collaborate closely on new features.", ko: "마케팅과 디자인 팀은 새로운 기능 개발을 위해 긴밀하게 협업합니다." },
+      "comprehensive": { en: "The report provides a comprehensive overview of the quarterly results.", ko: "그 보고서는 분기별 실적에 대한 포괄적인 개요를 제공합니다." },
+      "crucial": { en: "Effective communication is crucial for running remote teams smoothly.", ko: "효과적인 소통은 원격 팀을 원활하게 운영하는 데 결정적입니다." },
+      "deteriorate": { en: "Without immediate maintenance, road conditions will deteriorate fast.", ko: "즉각적인 보수 작업이 없으면 도로 상태는 빠르게 악화될 것입니다." },
+      "diminish": { en: "The company's influence in the market began to diminish gradually.", ko: "시장에서 그 회사의 영향력은 서서히 줄어들기 시작했습니다." },
+      "diverse": { en: "Our company prides itself on having a diverse and inclusive workforce.", ko: "저희 회사는 다양하고 포용적인 인력을 보유하고 있는 것을 자랑스럽게 생각합니다." },
+      "efficient": { en: "Using keyboard shortcuts makes your daily workflow much more efficient.", ko: "단축키를 활용하면 일상 업무 흐름이 훨씬 더 효율적으로 바뀝니다." },
+      "enhance": { en: "Regular aerobic exercise will enhance both your stamina and mood.", ko: "규칙적인 유산소 운동은 체력과 기분을 모두 향상시켜 줍니다." },
+      "feasible": { en: "The engineering team concluded that the proposal is technically feasible.", ko: "엔지니어링 팀은 그 제안이 기술적으로 실현 가능하다고 결론지었습니다." },
+      "fluctuate": { en: "Currency exchange rates can fluctuate widely based on global news.", ko: "환율은 글로벌 뉴스에 따라 대단히 큰 폭으로 요동칠 수 있습니다." },
+      "inevitable": { en: "Change is inevitable when transitioning to a modern cloud system.", ko: "현대적인 클라우드 시스템으로 전환할 때 변화는 불가피합니다." },
+      "innovative": { en: "Her startup developed an innovative way to recycle ocean plastic.", ko: "그녀의 스타트업은 해양 플라스틱을 재활용하는 혁신적인 방법을 개발했습니다." },
+      "intricate": { en: "The watch mechanism is composed of hundreds of intricate tiny gears.", ko: "그 시계 메커니즘은 수백 개의 복잡하고 정교한 미세 톱니바퀴들로 구성되어 있습니다." },
+      "prevalent": { en: "Remote working has become prevalent across tech companies worldwide.", ko: "재택근무는 전 세계 테크 기업들 사이에서 매우 일반적이고 널리 퍼진 방식이 되었습니다." },
+      "reluctant": { en: "Many consumers are reluctant to share personal details online.", ko: "많은 소비자들이 온라인에서 개인 정보를 공유하기를 꺼려합니다." },
+      "simultaneous": { en: "The launch event featured simultaneous live translation in five languages.", ko: "그 출시 행사에서는 5개 언어로 된 동시통역이 함께 제공되었습니다." },
+      "substantial": { en: "The new automation software resulted in a substantial saving of time.", ko: "새로운 자동화 소프트웨어 덕분에 상당한 양의 시간을 절약할 수 있었습니다." },
+      "transparent": { en: "Management promised to be fully transparent about future compensation.", ko: "경영진은 향후 보상 체계에 대해 완벽하게 투명할 것을 약속했습니다." },
+      "unprecedented": { en: "The rapid adoption of AI technology is truly unprecedented.", ko: "인공지능 기술의 급격한 도입 속도는 참으로 전례가 없는 수준입니다." },
+      "versatile": { en: "This kitchen gadget is versatile enough to chop, blend, and whisk.", ko: "이 주방 도구는 다지고 섞고 거품을 낼 수 있을 정도로 매우 다재다능합니다." },
+      "advocate": { en: "Doctors strongly advocate getting at least seven hours of restful sleep.", ko: "의사들은 최소 일곱 시간의 편안한 수면을 취할 것을 강력히 권고합니다." },
+      "allocate": { en: "The city council voted to allocate more funds to public parks.", ko: "시의회는 공공 공원에 더 많은 예산을 배정하기로 결의했습니다." },
+      "anticipate": { en: "Economists anticipate a steady recovery over the coming quarters.", ko: "경제학자들은 다가오는 분기들에 걸쳐 꾸준한 회복세를 예상하고 있습니다." },
+      "coherent": { en: "He formulated a clear and coherent strategy for expanding overseas.", ko: "그는 해외 진출을 위한 명확하고 일관성 있는 전략을 수립했습니다." },
+      "compensate": { en: "The airline offered travel vouchers to compensate for the delayed flight.", ko: "항공사는 비행기 지연을 보상하기 위해 여행 상품권을 제공했습니다." },
+      "consecutive": { en: "The basketball team celebrated five consecutive championship wins.", ko: "그 농구팀은 5연속 챔피언십 우승을 자축했습니다." },
+      "contemplate": { en: "She took a sabbatical to contemplate her future life choices.", ko: "그녀는 향후 인생의 선택들을 깊이 고심하기 위해 안식년을 가졌습니다." },
+      "dedicate": { en: "Volunteers dedicate their Saturday mornings to cleaning local rivers.", ko: "자원봉사자들은 토요일 아침을 지역 하천 정화에 기꺼이 바칩니다." },
+      "deliberate": { en: "Choosing the right words requires deliberate thought and patience.", ko: "적절한 단어를 고르는 데는 신중한 생각과 인내심이 필요합니다." },
+      "diligent": { en: "Diligent preparation allowed the student to ace the entrance exam.", ko: "성실하고 부지런한 준비 덕분에 그 학생은 입학시험을 훌륭히 치를 수 있었습니다." },
+      "disrupt": { en: "Sudden power outages can seriously disrupt factory production lines.", ko: "갑작스러운 정전은 공장 생산 라인을 심각하게 중단시킬 수 있습니다." },
+      "evaluate": { en: "The hiring manager will evaluate each candidate's problem-solving skills.", ko: "채용 매니저는 각 후보자의 문제 해결 역량을 면밀히 평가할 것입니다." },
+      "facilitate": { en: "Online tools facilitate seamless collaboration among distributed teams.", ko: "온라인 도구들은 분산된 팀들 간의 원활하고 매끄러운 협업을 촉진합니다." },
+      "foster": { en: "Great leaders actively foster a culture of creativity and trust.", ko: "훌륭한 리더들은 창의성과 신뢰의 문화를 적극적으로 조성하고 육성합니다." },
+      "implement": { en: "Our team will implement the new security guidelines next week.", ko: "저희 팀은 다음 주에 새로운 보안 가이드라인을 본격 적용할 예정입니다." },
+      "mandatory": { en: "Wearing protective safety goggles is mandatory in the chemistry lab.", ko: "화학 실험실에서는 안전보호용 보안경 착용이 의무 사항입니다." },
+      "mitigate": { en: "Diversifying investments is one of the best ways to mitigate financial risk.", ko: "분산 투자는 금융 위험을 완화하고 줄일 수 있는 최선의 방법 중 하나입니다." },
+      "negotiate": { en: "The supplier was willing to negotiate a discount for bulk orders.", ko: "공급업체는 대량 주문에 대해 기꺼이 할인을 협상할 의향이 있었습니다." },
+      "nuance": { en: "Translators need to capture every subtle cultural nuance accurately.", ko: "번역가들은 모든 미묘한 문화적 뉘앙스를 정확하게 포착해야 합니다." },
+      "paramount": { en: "Customer privacy and security are of paramount importance to us.", ko: "고객의 개인정보 보호와 보안은 저희에게 무엇보다도 가장 중요한 가치입니다." },
+      "profound": { en: "The speaker's insightful words had a profound impact on the audience.", ko: "연사의 통찰력 넘치는 말은 청중들에게 깊은 울림과 영향을 주었습니다." },
+      "relentless": { en: "His relentless pursuit of perfection led to outstanding breakthroughs.", ko: "완벽을 향한 그의 끊임없는 집념은 탁월한 혁신적 돌파구로 이어졌습니다." },
+      "rigorous": { en: "Every aviation part undergoes rigorous testing before installation.", ko: "모든 항공기 부품은 설치되기 전 엄격하고 철저한 테스트를 거칩니다." },
+      "subtle": { en: "There was a subtle change in his tone that suggested disagreement.", ko: "그의 말투에는 반대를 암시하는 미묘한 변화가 있었습니다." },
+      "succinct": { en: "Keep your executive summary succinct and focused on key metrics.", ko: "경영진 요약 보고서는 간결하고 핵심 지표에 집중되도록 작성하세요." },
+      "tenacious": { en: "She is a tenacious investigator who never gives up on a cold case.", ko: "그녀는 미제 사건을 결코 포기하지 않는 끈기 있고 집요한 수사관입니다." },
+      "validate": { en: "We conducted extensive interviews to validate our market assumptions.", ko: "우리는 시장에 대한 가설을 검증하기 위해 광범위한 인터뷰를 진행했습니다." }
     };
-
     // 모바일 네트워크 지연 없이 0초 만에 완벽한 원어민 예문과 1:1 한국어 해석을 반환하는 엔진
     function getInstantCompanionExample(wordItem) {
       if (!wordItem) return { en: "-", ko: "-" };
       const eng = stripVersionTag(wordItem.english || '').trim();
       const kor = (wordItem.korean || '').trim();
-      const cleanKey = eng.toLowerCase();
+      // 괄호 및 특수문자 제거 후 순수 단어 키 추출
+      const cleanKey = eng.replace(/\(.*?\)/g, '').replace(/\[.*?\]/g, '').trim().toLowerCase();
       const sheetEx = (wordItem.example || '').trim().toLowerCase();
 
-      // 1. 직접 큐레이션된 예문 사전 매칭
+      // 1. 직접 큐레이션된 예문 사전 매칭 (정확 키 대조)
       if (DISTINCT_COMPANION_EXAMPLES[cleanKey]) {
-        return DISTINCT_COMPANION_EXAMPLES[cleanKey];
+        const item = DISTINCT_COMPANION_EXAMPLES[cleanKey];
+        if (item.en.trim().toLowerCase() !== sheetEx) {
+          return item;
+        }
       }
 
-      // 2. 3,000개 미국인 최빈출 어휘 풀에서 시트 예문과 다른 실전 예문 매칭
+      // 2. 100대 핵심 구동사 & 관용구 마스터 리스트 대조
+      const masterList = [
+        ...CORE_AMERICAN_PHRASAL_VERBS, 
+        ...EXTENDED_AMERICAN_PHRASAL_VERBS, 
+        ...AMERICAN_TOP_COLLOQUIAL_IDIOMS, 
+        ...EXTENDED_AMERICAN_IDIOMS
+      ];
+      const masterMatch = masterList.find(m => {
+        const mKey = m.en.toLowerCase();
+        return (mKey === cleanKey || cleanKey.includes(mKey) || mKey.includes(cleanKey)) &&
+               m.ex && m.ex.trim().toLowerCase() !== sheetEx;
+      });
+      if (masterMatch) {
+        return { en: masterMatch.ex, ko: masterMatch.koEx };
+      }
+
+      // 3. 3,000개 미국인 최빈출 어휘 풀에서 시트 예문과 다른 실전 예문 매칭
       if (Array.isArray(allDictionaryWords)) {
-        const matched = allDictionaryWords.find(w => 
-          w.english.toLowerCase() === cleanKey && 
-          w.example && w.example.trim().toLowerCase() !== sheetEx
-        );
+        const matched = allDictionaryWords.find(w => {
+          const wKey = w.english.toLowerCase();
+          return (wKey === cleanKey || wKey.includes(cleanKey)) && 
+                 w.example && w.example.trim().toLowerCase() !== sheetEx;
+        });
         if (matched && matched.example) {
           return { 
             en: matched.example, 
@@ -868,375 +1104,121 @@
         }
       }
 
-      // 3. 100대 핵심 구동사 & 관용구 마스터 리스트 대조
-      const masterList = [
-        ...CORE_AMERICAN_PHRASAL_VERBS, 
-        ...EXTENDED_AMERICAN_PHRASAL_VERBS, 
-        ...AMERICAN_TOP_COLLOQUIAL_IDIOMS, 
-        ...EXTENDED_AMERICAN_IDIOMS
-      ];
-      const masterMatch = masterList.find(m => 
-        m.en.toLowerCase() === cleanKey && 
-        m.ex && m.ex.trim().toLowerCase() !== sheetEx
-      );
-      if (masterMatch) {
-        return { en: masterMatch.ex, ko: masterMatch.koEx };
+      // 4. 품사 및 한국어 문맥 기반 고품질 자연어 회화 문장 생성기
+      const cleanWord = eng.charAt(0).toUpperCase() + eng.slice(1);
+      const isVerb = /다$/.test(kor) || /하다|되다|내다|보다|주다/.test(kor);
+      const isAdjective = /한$|적$|운$|는$|인$/.test(kor) || /세심|취약|명쾌|포괄|중요|효율/.test(kor);
+
+      if (isAdjective) {
+        const adjTemplates = [
+          {
+            en: `Adopting a ${eng} approach helped the team prevent major errors.`,
+            ko: `${kor} 접근 방식을 취한 덕분에 팀은 중대한 오류들을 예방할 수 있었습니다.`
+          },
+          {
+            en: `It is essential to stay ${eng} when navigating unpredictable challenges.`,
+            ko: `예측하기 어려운 난관을 헤쳐 나갈 때는 ${kor} 태도를 유지하는 것이 대단히 중요합니다.`
+          },
+          {
+            en: `The manager commended her for delivering such ${eng} and thoughtful results.`,
+            ko: `팀장은 그녀가 그처럼 ${kor} 신중한 성과물을 내놓은 것에 대해 아낌없이 칭찬했습니다.`
+          }
+        ];
+        for (const t of adjTemplates) {
+          if (!sheetEx.includes(t.en.toLowerCase())) return t;
+        }
+        return adjTemplates[0];
       }
 
-      // 4. 모바일에서도 즉시 출력되는 자연스러운 원어민 실전 회화 템플릿
-      const templates = [
+      if (isVerb) {
+        const verbTemplates = [
+          {
+            en: `We need to carefully ${eng} before making any permanent decisions.`,
+            ko: `되돌릴 수 없는 최종 결정을 내리기 전에 우리는 신중하게 ${kor}해야 합니다.`
+          },
+          {
+            en: `She managed to ${eng} despite running into several unexpected setbacks.`,
+            ko: `그녀는 몇 차례 예상치 못한 난관에 부딪혔음에도 불구하고 침착하게 잘 ${kor}해냈습니다.`
+          },
+          {
+            en: `Our department decided to ${eng} to improve overall operational efficiency.`,
+            ko: `저희 부서는 전반적인 업무 효율성을 끌어올리기 위해 적극적으로 ${kor}하기로 결정했습니다.`
+          }
+        ];
+        for (const t of verbTemplates) {
+          if (!sheetEx.includes(t.en.toLowerCase())) return t;
+        }
+        return verbTemplates[0];
+      }
+
+      // 명사 및 일반 표현
+      const generalTemplates = [
         {
-          en: `I always try to use "${eng}" whenever I talk with native speakers.`,
-          ko: `원어민과 대화할 때마다 "${eng}"(${kor}) 표현을 꼭 쓰려고 노력해요.`
+          en: `Developing strong ${eng} is fundamental for long-term professional growth.`,
+          ko: `장기적인 커리어 성장을 지속하기 위해서는 뛰어난 ${kor}을(를) 갖추는 것이 기본입니다.`
         },
         {
-          en: `Could you give me a practical tip on how to use "${eng}" naturally?`,
-          ko: `"${eng}"(${kor}) 표현을 어떻게 하면 자연스럽게 쓸 수 있는지 실전 팁을 알려주실 수 있나요?`
+          en: `The recent industry keynote highlighted the critical value of ${eng}.`,
+          ko: `최근 업계 기조연설에서는 ${kor}의 결정적인 중요성과 가치가 집중 조명되었습니다.`
         },
         {
-          en: `Mastering "${eng}" will significantly boost your daily conversational skills.`,
-          ko: `"${eng}"(${kor}) 표현을 마스터하면 일상 회화 실력이 눈에 띄게 향상될 것입니다.`
-        },
-        {
-          en: `Many professionals frequently rely on "${eng}" during business discussions.`,
-          ko: `많은 직장인들이 비즈니스 토론 중에 "${eng}"(${kor}) 표현을 아주 자주 활용합니다.`
-        },
-        {
-          en: `It takes a little practice to get comfortable using "${eng}" in real dialogues.`,
-          ko: `실전 대화에서 "${eng}"(${kor}) 표현을 능숙하고 편하게 쓰기까지는 약간의 연습이 필요합니다.`
+          en: `Both mentors and peers deeply appreciate his remarkable ${eng} under pressure.`,
+          ko: `압박감이 심한 상황에서도 그가 보여준 탁월한 ${kor}에 대해 멘토와 동료들 모두 깊이 인정하고 있습니다.`
         }
       ];
-
-      for (const t of templates) {
-        if (!sheetEx.includes(t.en.toLowerCase())) {
-          return t;
-        }
+      for (const t of generalTemplates) {
+        if (!sheetEx.includes(t.en.toLowerCase())) return t;
       }
-      return templates[0];
+      return generalTemplates[0];
     }
 
-    function generateDistinctFallbackExample(english, existingExample = "") {
-      const lowerEx = (existingExample || "").toLowerCase();
-      const alternatives = [
-        `It is crucial to recognize how "${english}" plays a role in modern work.`,
-        `Many professionals try to apply "${english}" in everyday communications.`,
-        `She explained why mastering "${english}" is a game changer.`,
-        `Let's focus on understanding "${english}" in actual daily conversations.`
-      ];
-      for (const alt of alternatives) {
-        if (!lowerEx.includes(alt.toLowerCase())) {
-          return alt;
-        }
-      }
-      return `Native speakers frequently use "${english}" in practical dialogues.`;
-    }
-
-    // --- DOM Elements ---
-    const syncStatusDot = document.getElementById('syncStatusDot');
-    const syncStatusText = document.getElementById('syncStatusText');
-    const totalWordCountBadge = document.getElementById('totalWordCountBadge');
-    const progressBar = document.getElementById('progressBar');
-    const progressText = document.getElementById('progressText');
-    const promptLabel = document.getElementById('promptLabel');
-    const promptContent = document.getElementById('promptContent');
-    const speakPromptBtn = document.getElementById('speakPromptBtn');
-    const answerSection = document.getElementById('answerSection');
-    const answerContent = document.getElementById('answerContent');
-    const speakAnswerBtn = document.getElementById('speakAnswerBtn');
-    const exampleBox = document.getElementById('exampleBox');
-    const exampleContent = document.getElementById('exampleContent');
-    const sheetMeaningContainer = document.getElementById('sheetMeaningContainer');
-    const toggleSheetMeaningBtn = document.getElementById('toggleSheetMeaningBtn');
-    const toggleSheetMeaningText = document.getElementById('toggleSheetMeaningText');
-    const sheetExampleMeaningBox = document.getElementById('sheetExampleMeaningBox');
-    const sheetExampleMeaning = document.getElementById('sheetExampleMeaning');
-    const aiExampleBox = document.getElementById('aiExampleBox');
-    const aiExampleContent = document.getElementById('aiExampleContent');
-    const aiMeaningContainer = document.getElementById('aiMeaningContainer');
-    const toggleAiMeaningBtn = document.getElementById('toggleAiMeaningBtn');
-    const toggleAiMeaningText = document.getElementById('toggleAiMeaningText');
-    const aiExampleMeaningBox = document.getElementById('aiExampleMeaningBox');
-    const aiExampleMeaning = document.getElementById('aiExampleMeaning');
-    const prevBtn = document.getElementById('prevBtn');
-    const revealBtn = document.getElementById('revealBtn');
-    const revealBtnText = document.getElementById('revealBtnText');
-    const revealBtnIcon = document.getElementById('revealBtnIcon');
-    const nextBtn = document.getElementById('nextBtn');
-    const shuffleBtn = document.getElementById('shuffleBtn');
-    const modeRandom = document.getElementById('modeRandom');
-    const modeEnToKo = document.getElementById('modeEnToKo');
-    const modeKoToEn = document.getElementById('modeKoToEn');
-    const modeAll = document.getElementById('modeAll');
-    const modeSearch = document.getElementById('modeSearch');
-    const listModal = document.getElementById('listModal');
-    const toggleListBtn = document.getElementById('toggleListBtn');
-    const closeListBtn = document.getElementById('closeListBtn');
-    const searchInput = document.getElementById('searchInput');
-    const wordListContainer = document.getElementById('wordListContainer');
-    const settingsModal = document.getElementById('settingsModal');
-    const closeSettingsBtn = document.getElementById('closeSettingsBtn');
-    const configBtn = document.getElementById('configBtn');
-    const sheetUrlInput = document.getElementById('sheetUrlInput');
-    const saveSheetUrlBtn = document.getElementById('saveSheetUrlBtn');
-    const resetSampleBtn = document.getElementById('resetSampleBtn');
-    const syncNowBtn = document.getElementById('syncNowBtn');
-    const syncNowIcon = document.getElementById('syncNowIcon');
-    const geminiApiKeyInput = document.getElementById('geminiApiKeyInput');
-
-    // Search Modal Elements
-    const openSearchBtn = document.getElementById('openSearchBtn');
-    const searchModal = document.getElementById('searchModal');
-    const closeSearchModalBtn = document.getElementById('closeSearchModalBtn');
-    const dictSearchInput = document.getElementById('dictSearchInput');
-    const clearDictSearchBtn = document.getElementById('clearDictSearchBtn');
-    const execSearchBtn = document.getElementById('execSearchBtn');
-    const searchSuggestionsBox = document.getElementById('searchSuggestionsBox');
-    const suggestionsList = document.getElementById('suggestionsList');
-    const searchResultDetail = document.getElementById('searchResultDetail');
-    const searchEmptyPlaceholder = document.getElementById('searchEmptyPlaceholder');
-
-    const resultWord = document.getElementById('resultWord');
-    const resultPhonetic = document.getElementById('resultPhonetic');
-    const resultSourceBadge = document.getElementById('resultSourceBadge');
-    const resultMeaning = document.getElementById('resultMeaning');
-    const speakResultWordBtn = document.getElementById('speakResultWordBtn');
-    const jumpToCardBox = document.getElementById('jumpToCardBox');
-    const jumpToCardBtn = document.getElementById('jumpToCardBtn');
-
-    const resultSheetExampleBox = document.getElementById('resultSheetExampleBox');
-    const resultSheetExample = document.getElementById('resultSheetExample');
-    const speakResultSheetExBtn = document.getElementById('speakResultSheetExBtn');
-
-    const resultAiExampleBox = document.getElementById('resultAiExampleBox');
-    const resultAiExample = document.getElementById('resultAiExample');
-    const resultAiMeaning = document.getElementById('resultAiMeaning');
-    const speakResultAiExBtn = document.getElementById('speakResultAiExBtn');
-
-    let activeSearchResult = null;
-
-    function parseGoogleSheetUrl(url) {
+    // 온라인 무료 사전 API (Free Dictionary API) 연동을 통한 실시간 고품질 예문 검색
+    async function fetchOnlineCompanionExample(word, currentSheetEx) {
       try {
-        const idMatch = url.match(/\/d\/([a-zA-Z0-9-_]+)/);
-        const gidMatch = url.match(/[#&?]gid=([0-9]+)/);
-        const sheetId = idMatch ? idMatch[1] : null;
-        const gid = gidMatch ? gidMatch[1] : "0";
-        return { sheetId, gid };
-      } catch (e) {
-        return { sheetId: null, gid: "0" };
-      }
-    }
-
-    function parseCSV(text) {
-      const rows = [];
-      let currentRow = [];
-      let currentVal = '';
-      let insideQuote = false;
-
-      for (let i = 0; i < text.length; i++) {
-        const char = text[i];
-        const nextChar = text[i + 1];
-
-        if (char === '"') {
-          if (insideQuote && nextChar === '"') {
-            currentVal += '"';
-            i++;
-          } else {
-            insideQuote = !insideQuote;
-          }
-        } else if (char === ',' && !insideQuote) {
-          currentRow.push(currentVal.trim());
-          currentVal = '';
-        } else if ((char === '\r' || char === '\n') && !insideQuote) {
-          if (char === '\r' && nextChar === '\n') {
-            i++;
-          }
-          currentRow.push(currentVal.trim());
-          if (currentRow.some(val => val !== '')) {
-            rows.push(currentRow);
-          }
-          currentRow = [];
-          currentVal = '';
-        } else {
-          currentVal += char;
-        }
-      }
-      if (currentVal || currentRow.length > 0) {
-        currentRow.push(currentVal.trim());
-        if (currentRow.some(val => val !== '')) {
-          rows.push(currentRow);
-        }
-      }
-      return rows;
-    }
-
-    async function fetchGoogleSheetWords(url) {
-      updateSyncStatus("loading", "시트 불러오는 중...");
-      const { sheetId, gid } = parseGoogleSheetUrl(url);
-
-      if (!sheetId) {
-        throw new Error("유효하지 않은 시트 주소입니다.");
-      }
-
-      const csvEndpoints = [
-        `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv&gid=${gid}`,
-        `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv&gid=${gid}`
-      ];
-
-      let rawCsv = null;
-      for (const endpoint of csvEndpoints) {
-        try {
-          const res = await fetch(endpoint, { cache: "no-store" });
-          if (res.ok) {
-            const text = await res.text();
-            if (text && !text.includes("<!DOCTYPE html>")) {
-              rawCsv = text;
-              break;
-            }
-          }
-        } catch (err) {}
-      }
-
-      if (!rawCsv) {
-        throw new Error("구글 시트를 읽어올 수 없습니다. '링크가 있는 모든 사용자 - 뷰어' 공유를 확인해주세요.");
-      }
-
-      const rows = parseCSV(rawCsv);
-      if (rows.length === 0) throw new Error("시트가 비어있습니다.");
-
-      let startRowIndex = 0;
-      const firstCol = (rows[0][0] || "").toLowerCase();
-      if (firstCol.includes("영어") || firstCol.includes("english") || firstCol.includes("단어") || firstCol.includes("word")) {
-        startRowIndex = 1;
-      }
-
-      const parsed = [];
-      for (let i = startRowIndex; i < rows.length; i++) {
-        const row = rows[i];
-        const english = (row[0] || "").trim();
-        const korean = (row[1] || "").trim();
-        const example = (row[2] || "").trim();
-        const exampleKo = (row[3] || "").trim();
-
-        if (english || korean) {
-          parsed.push({
-            english: english || "-",
-            korean: korean || "-",
-            example: example || "등록된 예문이 없습니다.",
-            exampleKo: exampleKo || ""
-          });
-        }
-      }
-
-      if (parsed.length === 0) throw new Error("단어 데이터가 없습니다.");
-      return parsed;
-    }
-
-    function updateSyncStatus(status, text) {
-      if (status === "loading") {
-        syncStatusDot.className = "w-1.5 h-1.5 rounded-full bg-amber-400 animate-ping";
-        syncStatusText.textContent = text || "연동 중...";
-      } else if (status === "success") {
-        syncStatusDot.className = "w-1.5 h-1.5 rounded-full bg-emerald-500";
-        syncStatusText.textContent = text || "연동 완료";
-      } else {
-        syncStatusDot.className = "w-1.5 h-1.5 rounded-full bg-rose-500";
-        syncStatusText.textContent = text || "샘플 모드";
-      }
-    }
-
-    function showToast(msg, isError = false) {
-      const toast = document.getElementById('toast');
-      const toastMsg = document.getElementById('toastMsg');
-      const toastIcon = document.getElementById('toastIcon');
-
-      toastMsg.textContent = msg;
-      toastIcon.className = isError ? "fa-solid fa-circle-exclamation text-rose-400 text-xs" : "fa-solid fa-check text-red-400 text-xs";
-
-      toast.classList.remove('opacity-0');
-      toast.classList.add('opacity-100');
-      setTimeout(() => {
-        toast.classList.remove('opacity-100');
-        toast.classList.add('opacity-0');
-      }, 2200);
-    }
-
-    function determineCardMode() {
-      if (studyMode === 'random') {
-        currentCardMode = Math.random() < 0.5 ? 'enToKo' : 'koToEn';
-      } else if (studyMode === 'all') {
-        currentCardMode = 'enToKo'; // All 모드는 영어가 항상 먼저 출제
-      } else {
-        currentCardMode = studyMode;
-      }
-    }
-
-    // 모바일 브라우저 CORS 및 네트워크 제약에 완벽 대응하는 다중 문장 번역 엔진
-    async function translateSentence(sentence) {
-      if (!sentence || sentence === '-' || sentence.trim() === '' || sentence === '등록된 예문이 없습니다.') {
-        return "";
-      }
-
-      const cleanSentence = sentence.trim();
-      const lowerKey = cleanSentence.toLowerCase().replace(/["']/g, '');
-
-      // 1. 메모리 캐시 확인
-      if (sentenceTranslationCache.has(lowerKey)) {
-        return sentenceTranslationCache.get(lowerKey);
-      }
-
-      // 2. 정적 사전 확인
-      if (PREDEFINED_SENTENCE_TRANSLATIONS[lowerKey]) {
-        const trans = PREDEFINED_SENTENCE_TRANSLATIONS[lowerKey];
-        sentenceTranslationCache.set(lowerKey, trans);
-        return trans;
-      }
-
-      // 3. 1차 시도: 구글 번역 gtx API
-      try {
+        const cleanWord = word.trim().toLowerCase().replace(/[^a-z\s-]/g, '').trim();
+        if (!cleanWord || cleanWord.includes(' ')) return null;
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 2500);
-        const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=ko&dt=t&q=${encodeURIComponent(cleanSentence)}`;
-        const res = await fetch(url, { signal: controller.signal });
+        const timeoutId = setTimeout(() => controller.abort(), 2000);
+        const res = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${encodeURIComponent(cleanWord)}`, { signal: controller.signal });
         clearTimeout(timeoutId);
-
-        if (res.ok) {
-          const json = await res.json();
-          if (json && json[0]) {
-            const translatedText = json[0].map(item => item[0]).join('').trim();
-            if (translatedText && translatedText !== cleanSentence) {
-              sentenceTranslationCache.set(lowerKey, translatedText);
-              return translatedText;
+        if (!res.ok) return null;
+        const data = await res.json();
+        if (!Array.isArray(data) || !data[0]?.meanings) return null;
+        
+        let foundEx = '';
+        for (const m of data[0].meanings) {
+          if (m.definitions) {
+            for (const d of m.definitions) {
+              if (d.example && d.example.trim().length > 15) {
+                const candidate = d.example.trim();
+                if (candidate.toLowerCase() !== currentSheetEx.toLowerCase() && !candidate.toLowerCase().includes(currentSheetEx.toLowerCase())) {
+                  foundEx = candidate;
+                  break;
+                }
+              }
             }
           }
+          if (foundEx) break;
         }
-      } catch (err) {}
-
-      // 4. 2차 시도: 모바일 CORS 공식 지원 MyMemory 번역 API
-      try {
-        const controller2 = new AbortController();
-        const timeoutId2 = setTimeout(() => controller2.abort(), 3000);
-        const mmUrl = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(cleanSentence)}&langpair=en|ko`;
-        const res2 = await fetch(mmUrl, { signal: controller2.signal });
-        clearTimeout(timeoutId2);
-
-        if (res2.ok) {
-          const data2 = await res2.json();
-          const translated2 = data2?.responseData?.translatedText?.trim();
-          if (translated2 && translated2 !== cleanSentence && !translated2.includes("QUERY LENGTH LIMIT EXCEEDED")) {
-            sentenceTranslationCache.set(lowerKey, translated2);
-            return translated2;
-          }
+        
+        if (foundEx) {
+          foundEx = foundEx.charAt(0).toUpperCase() + foundEx.slice(1);
+          if (!/[.!?]$/.test(foundEx)) foundEx += '.';
+          const transKo = await translateSentence(foundEx);
+          return {
+            en: foundEx,
+            ko: transKo || `"${word}"의 실제 원어민 사전 수록 예문입니다.`
+          };
         }
-      } catch (err) {}
-
-      // 단어 뜻을 대신 넣지 않고 자연스러운 문장 번역 상태 유지
-      return "";
+      } catch (e) {
+        // 무시하고 기본 캐시 유지
+      }
+      return null;
     }
-
-    // AI 예문 1문장 생성 및 캐싱 (모바일 완전 무결점 보장)
+    // AI 예문 1문장 생성 및 캐싱 (랜덤 탭 및 모든 모드 완벽 호환)
     async function loadCompanionAiExample(wordItem) {
       if (!wordItem || !wordItem.english || wordItem.english === '-') return;
-      const cleanKey = wordItem.english.trim().toLowerCase();
+      const cleanKey = stripVersionTag(wordItem.english).replace(/\(.*?\)/g, '').replace(/\[.*?\]/g, '').trim().toLowerCase();
       const sheetEx = (wordItem.example || "").trim().toLowerCase();
 
       // All 모드인 경우 3,000개 실전 예문과 1:1 한국어 해석이 이미 완비되어 있으므로 즉시 0초 렌더링
@@ -1253,7 +1235,7 @@
       // 1. 이미 캐시된 예문이 있고, 시트 예문과 다른지 확인 후 즉각 표시
       if (aiExampleCache.has(cleanKey)) {
         const cached = aiExampleCache.get(cleanKey);
-        if (cached && cached.en && cached.en.trim().toLowerCase() !== sheetEx) {
+        if (cached && cached.en && cached.en.trim().toLowerCase() !== sheetEx && !cached.en.toLowerCase().includes('i always try to use')) {
           displayAiExample(cached);
           return;
         }
@@ -1264,7 +1246,17 @@
       aiExampleCache.set(cleanKey, instantData);
       displayAiExample(instantData);
 
-      // 3. 사용자 설정 Gemini API 키가 있는 경우에만 백그라운드로 추가 실시간 생성 시도
+      // 3. 백그라운드로 무료 사전 API(Free Dictionary API)를 조회하여 더 생생한 예문이 있으면 자연스럽게 업데이트
+      fetchOnlineCompanionExample(wordItem.english, sheetEx).then(onlineData => {
+        if (onlineData && onlineData.en && onlineData.en.toLowerCase() !== sheetEx) {
+          aiExampleCache.set(cleanKey, onlineData);
+          if (currentActiveItem && stripVersionTag(currentActiveItem.english).toLowerCase().includes(cleanKey)) {
+            displayAiExample(onlineData);
+          }
+        }
+      }).catch(() => {});
+
+      // 4. 사용자 설정 Gemini API 키가 있는 경우에만 백그라운드로 추가 실시간 생성 시도
       if (!customGeminiApiKey) {
         return;
       }
@@ -1309,7 +1301,7 @@ Create a completely different high-frequency, natural conversational sentence. R
                 ko: (parsed.ko || parsed.korean || "").replace(/\s*\(.*?쓰임새.*?\)\s*/g, '').trim()
               };
               aiExampleCache.set(cleanKey, freshData);
-              if (currentActiveItem && currentActiveItem.english.trim().toLowerCase() === cleanKey) {
+              if (currentActiveItem && stripVersionTag(currentActiveItem.english).toLowerCase().includes(cleanKey)) {
                 displayAiExample(freshData);
               }
             }
