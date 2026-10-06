@@ -735,7 +735,7 @@
       if (wordItem.example && wordItem.example !== "등록된 예문이 없습니다.") {
         const initialExample = {
           en: wordItem.example,
-          ko: wordItem.korean ? `("${wordItem.korean}"의 실제 회화 쓰임새)` : ""
+          ko: wordItem.exampleKo || ""
         };
         displayAiExample(initialExample);
       } else {
@@ -747,9 +747,9 @@
         const apiKey = "";
         const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
         
-        const systemPrompt = "You are an expert American native English coach specializing in high-frequency real-world English. Generate exactly ONE highly practical, authentic, and modern sentence that native speakers frequently use in daily life, work, or casual conversation (incorporating common collocations or idioms). Avoid stiff, textbook-style, or awkward dictionary sentences. The Korean translation must be natural, contemporary, and accurately capture the conversational tone.";
+        const systemPrompt = "You are an expert American native English coach specializing in high-frequency real-world English. Generate exactly ONE highly practical, authentic, and modern sentence that native speakers frequently use in daily life, work, or casual conversation (incorporating common collocations or idioms). Avoid stiff, textbook-style, or awkward dictionary sentences. The Korean translation must be a direct, natural, contemporary sentence translation without any meta commentary, parenthetical notes, or explanation.";
         const userPrompt = `Target Word/Expression: "${wordItem.english}" (Core meaning: "${wordItem.korean}").
-Create one high-frequency, natural conversational sentence showcasing how native speakers actually use this in real situations. Return a JSON object with keys "en" and "ko". Do not use markdown backticks.`;
+Create one high-frequency, natural conversational sentence showcasing how native speakers actually use this in real situations. Return a JSON object with keys "en" and "ko". "ko" must contain only the direct translation of the English sentence, absolutely no parenthetical explanations. Do not use markdown backticks.`;
 
         const response = await fetch(apiUrl, {
           method: 'POST',
@@ -780,7 +780,7 @@ Create one high-frequency, natural conversational sentence showcasing how native
           const parsed = JSON.parse(jsonText);
           const data = { 
             en: parsed.en || parsed.english || wordItem.example || `Let's use "${wordItem.english}" in our conversation today.`, 
-            ko: parsed.ko || parsed.korean || `실제 일상 대화에서 자연스럽게 자주 쓰입니다.` 
+            ko: (parsed.ko || parsed.korean || wordItem.exampleKo || "").replace(/\s*\(.*?쓰임새.*?\)\s*/g, '').trim()
           };
           aiExampleCache.set(cleanKey, data);
           if (currentActiveItem && currentActiveItem.english.trim().toLowerCase() === cleanKey) {
@@ -797,7 +797,7 @@ Create one high-frequency, natural conversational sentence showcasing how native
         
         const fallback = {
           en: fallbackSentence,
-          ko: `실생활 대화 및 미드 등에서 빈출되는 실전 표현입니다.`
+          ko: wordItem.exampleKo || ""
         };
         aiExampleCache.set(cleanKey, fallback);
         if (currentActiveItem && currentActiveItem.english.trim().toLowerCase() === cleanKey) {
@@ -809,7 +809,14 @@ Create one high-frequency, natural conversational sentence showcasing how native
     function displayAiExample(data) {
       if (!data) return;
       aiExampleContent.textContent = data.en || "-";
-      aiExampleMeaning.textContent = data.ko || "";
+      // 괄호 쓰임새 부가 설명 제거 필터링
+      const cleanMeaning = (data.ko || "").replace(/\s*\(.*?쓰임새.*?\)\s*/g, '').trim();
+      aiExampleMeaning.textContent = cleanMeaning;
+      if (!cleanMeaning) {
+        aiExampleMeaning.classList.add('hidden');
+      } else {
+        aiExampleMeaning.classList.remove('hidden');
+      }
     }
 
     function renderCard(resetReveal = true) {
@@ -1310,22 +1317,21 @@ Create one high-frequency, natural conversational sentence showcasing how native
       const cleanEng = newItem.english.trim();
       const exists = allDictionaryWords.some(w => w.english.toLowerCase() === cleanEng.toLowerCase());
       
-      // AI 추천 예문 캐시에도 즉시 저장
       const exEn = newItem.example || newItem.aiExample || '';
-      const exKo = newItem.nativeMeaning || newItem.korean || '';
+      const exKo = newItem.exampleKo || newItem.nativeMeaning || '';
       if (exEn) {
-        aiExampleCache.set(cleanEng, { en: exEn, ko: exKo });
+        aiExampleCache.set(cleanEng.toLowerCase(), { en: exEn, ko: exKo });
       }
 
       if (!exists) {
         const newEntry = {
           english: cleanEng,
           korean: (newItem.korean || '').trim(),
-          example: exEn
+          example: exEn,
+          exampleKo: exKo
         };
         allDictionaryWords.push(newEntry);
 
-        // 현재 All 모드 학습 중이라면 현재 학습 목록에도 즉시 추가
         if (studyMode === 'all') {
           if (!words.some(w => w.english.toLowerCase() === cleanEng.toLowerCase())) {
             words.push(newEntry);
