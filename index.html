@@ -497,6 +497,146 @@
     let isSpeakingAudio = false;
     const aiExampleCache = new Map();
 
+    // 시트 예문과 완벽하게 구별되는 큐레이션 회화 예문 사전
+    const DISTINCT_COMPANION_EXAMPLES = {
+      "meticulous": {
+        en: "She keeps meticulous records of all her travel expenses.",
+        ko: "그녀는 모든 출장 경비의 세부 내역을 꼼꼼하게 기록해 둡니다."
+      },
+      "resilience": {
+        en: "Small business owners proved their incredible resilience during the crisis.",
+        ko: "소상공인들은 위기 속에서 놀라운 회복력과 위기 극복 능력을 증명했습니다."
+      },
+      "ubiquitous": {
+        en: "Wireless earbuds have become almost ubiquitous on city subway commutes.",
+        ko: "무선 이어폰은 이제 지하철 통근길 어디서나 볼 수 있는 흔한 필수품이 되었습니다."
+      },
+      "ephemeral": {
+        en: "Cherry blossoms are notoriously ephemeral, lasting barely a week or two.",
+        ko: "벚꽃은 고작 일주일이나 2주 남짓 피어 있을 정도로 일시적이고 덧없기로 유명합니다."
+      },
+      "lucid": {
+        en: "Despite his advanced age, the professor remained mentally sharp and lucid.",
+        ko: "고령의 연세에도 불구하고 교수님은 여전히 정신이 총명하고 명쾌하셨습니다."
+      },
+      "pragmatic": {
+        en: "Taking public transit instead of buying a car was a pragmatic financial choice.",
+        ko: "차를 사는 대신 대중교통을 이용한 것은 대단히 현실적이고 실용적인 경제적 선택이었습니다."
+      },
+      "scrutinize": {
+        en: "Investors carefully scrutinized the startup's quarterly financial results.",
+        ko: "투자자들은 그 스타트업의 분기 재무 실적을 면밀하게 뜯어보며 검토했습니다."
+      },
+      "vulnerable": {
+        en: "Coastal towns are especially vulnerable to severe hurricane damage.",
+        ko: "해안가 마을들은 강력한 허리케인 피해에 특히 취약합니다."
+      },
+      "figure out": {
+        en: "I need to figure out which flight fits my schedule best.",
+        ko: "내 일정에 어떤 비행기 편이 가장 잘 맞는지 알아봐야겠어."
+      },
+      "touch base": {
+        en: "I just wanted to touch base and see how the new project is progressing.",
+        ko: "새 프로젝트가 어떻게 진행되고 있는지 상황도 나눌 겸 연락드렸어요."
+      },
+      "make sense": {
+        en: "Now that you break it down that way, it makes total sense.",
+        ko: "네가 그렇게 하나씩 설명해주니까 완전히 납득되고 말이 되네."
+      },
+      "wrap up": {
+        en: "If everyone is on board, let's wrap up here for today.",
+        ko: "모두 동의하신다면 오늘 미팅은 여기서 마무리하도록 하겠습니다."
+      },
+      "on the fence": {
+        en: "I'm still on the fence about whether to take the promotion.",
+        ko: "승진 제안을 받아들여야 할지 아직 결정을 못 내리고 망설이고 있어."
+      },
+      "catch up": {
+        en: "Drop by my office anytime this afternoon so we can catch up.",
+        ko: "밀린 이야기 좀 나눌 수 있게 오늘 오후에 언제든 편하게 내 사무실로 들러."
+      },
+      "play it by ear": {
+        en: "Since the weather is unpredictable, let's just play it by ear tomorrow.",
+        ko: "날씨를 예측하기 어려우니까, 내일은 그냥 상황 봐서 즉흥적으로 정하자."
+      },
+      "call it a day": {
+        en: "We've covered all the agenda items, so let's call it a day.",
+        ko: "회의 안건을 다 다루었으니, 오늘 업무는 여기서 마치고 퇴근하죠."
+      },
+      "out of the blue": {
+        en: "An old college roommate rang me up completely out of the blue.",
+        ko: "대학교 때 룸메이트였던 친구가 난데없이 뜬금없이 전화를 걸어왔어."
+      },
+      "run into": {
+        en: "You won't believe who I ran into at the airport terminal!",
+        ko: "내가 공항 터미널에서 누구랑 우연히 마주쳤는지 들으면 깜짝 놀랄걸!"
+      },
+      "overwhelmed": {
+        en: "Don't feel overwhelmed; take things step by step and prioritize.",
+        ko: "너무 벅차고 압도당할 필요 없어. 한 단계씩 우선순위를 두고 해치워보자."
+      },
+      "worth it": {
+        en: "Waking up before sunrise to catch the view was definitely worth it.",
+        ko: "그 경치를 보려고 일출 전에 일어난 보람과 가치가 충분했어."
+      },
+      "second thoughts": {
+        en: "Are you having second thoughts about signing the contract?",
+        ko: "계약서에 서명하는 것에 대해 다시 생각해보니 의구심이나 재고가 드니?"
+      },
+      "take for granted": {
+        en: "We often take clean tap water for granted until a pipe bursts.",
+        ko: "우리는 수도관이 터지기 전까지는 깨끗한 수돗물이 나오는 걸 너무나 당연하게 여긴다."
+      },
+      "relatable": {
+        en: "His personal essays are so heartfelt and relatable to young adults.",
+        ko: "그의 개인 수필들은 젊은 세대에게 너무나 진솔하고 깊은 공감을 불러일으킵니다."
+      },
+      "go with the flow": {
+        en: "Whenever we travel abroad, we prefer to just go with the flow.",
+        ko: "우리는 해외여행을 갈 때마다 빡빡한 계획 없이 그냥 흘러가는 대로 즐기는 편이야."
+      },
+      "straightforward": {
+        en: "The refund policy was surprisingly straightforward and hassle-free.",
+        ko: "환불 정책이 놀라울 정도로 복잡하지 않고 직관적이며 번거로움이 없었습니다."
+      },
+      "spontaneous": {
+        en: "They took a spontaneous late-night drive down to the coast.",
+        ko: "그들은 늦은 밤에 즉흥적으로 바닷가 쪽으로 드라이브를 떠났습니다."
+      },
+      "procrastinate": {
+        en: "If you keep procrastinating, you'll regret it when finals arrive.",
+        ko: "계속 일을 미루다가는 기말시험 기간이 닥쳤을 때 크게 후회하게 될 거야."
+      },
+      "hang in there": {
+        en: "I know work is tough right now, but please hang in there!",
+        ko: "지금 일 때문에 힘든 거 다 알지만, 조금만 더 기운 내고 버텨봐!"
+      },
+      "spot on": {
+        en: "Her analysis of the market trends turned out to be spot on.",
+        ko: "시장 동향에 대한 그녀의 분석은 정확하게 딱 들어맞았던 것으로 드러났습니다."
+      },
+      "under the weather": {
+        en: "She sounded a bit under the weather during our morning phone call.",
+        ko: "오늘 아침 통화할 때 그녀의 목소리가 몸이 좀 으슬으슬 안 좋아 보이더라고."
+      }
+    };
+
+    // 시트 예문과 중복되지 않는 별도 실전 대체 예문 생성기
+    function generateDistinctFallbackExample(word, sheetExample) {
+      const cleanWord = (word || "").trim();
+      const candidates = [
+        `In everyday conversations, native speakers frequently rely on "${cleanWord}" to express this clearly.`,
+        `You'll often hear Americans use "${cleanWord}" during casual work catch-ups and meetings.`,
+        `It is very natural to use "${cleanWord}" when describing real-life experiences.`
+      ];
+      for (const sentence of candidates) {
+        if (!sheetExample || sentence.toLowerCase() !== sheetExample.trim().toLowerCase()) {
+          return sentence;
+        }
+      }
+      return `Native speakers frequently use "${cleanWord}" in modern casual conversations.`;
+    }
+
     // DOM Elements
     const promptLabel = document.getElementById('promptLabel');
     const promptContent = document.getElementById('promptContent');
@@ -751,29 +891,30 @@
       return currentActiveItem?.korean ? `(${currentActiveItem.korean})` : "";
     }
 
-    // AI 예문 1문장 생성 및 캐싱 (안전 파싱 및 즉각 Fallback 지원)
+    // AI 예문 1문장 생성 및 캐싱 (시트 예문과 절대 겹치지 않도록 완벽 분리)
     async function loadCompanionAiExample(wordItem) {
       if (!wordItem || !wordItem.english || wordItem.english === '-') return;
       const cleanKey = wordItem.english.trim().toLowerCase();
+      const sheetEx = (wordItem.example || "").trim().toLowerCase();
 
-      // 1. 이미 캐시된 예문이 있으면 문장과 버튼을 즉시 동시에 표시
+      // 1. 이미 캐시된 예문이 있고, 시트 예문과 다른지 확인 후 즉시 표시
       if (aiExampleCache.has(cleanKey)) {
-        displayAiExample(aiExampleCache.get(cleanKey));
+        const cached = aiExampleCache.get(cleanKey);
+        if (cached && cached.en && cached.en.trim().toLowerCase() !== sheetEx) {
+          displayAiExample(cached);
+          return;
+        }
+      }
+
+      // 2. 별도 등록된 큐레이션 회화 예문이 있으면 즉시 표시 (시트 예문 복사 완전 차단)
+      if (DISTINCT_COMPANION_EXAMPLES[cleanKey]) {
+        const curated = DISTINCT_COMPANION_EXAMPLES[cleanKey];
+        aiExampleCache.set(cleanKey, curated);
+        displayAiExample(curated);
         return;
       }
 
-      // 2. 단어 자체에 이미 좋은 실전 예문과 번역이 있는 경우 즉시 표시
-      if (wordItem.example && wordItem.example !== "등록된 예문이 없습니다.") {
-        const initialExample = {
-          en: wordItem.example,
-          ko: wordItem.exampleKo || await translateSentence(wordItem.example)
-        };
-        aiExampleCache.set(cleanKey, initialExample);
-        displayAiExample(initialExample);
-        return;
-      }
-
-      // 3. 새로 생성해야 하는 경우 로딩 상태 표시
+      // 3. 새로 생성 중 표시
       aiExampleContent.textContent = "원어민 실전 활용 예문 생성 중...";
       if (aiExampleMeaning) aiExampleMeaning.textContent = "";
       if (aiExampleMeaningBox) aiExampleMeaningBox.classList.add('hidden');
@@ -783,9 +924,10 @@
         const apiKey = "";
         const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
         
-        const systemPrompt = "You are an expert American native English coach specializing in high-frequency real-world English. Generate exactly ONE highly practical, authentic, and modern sentence that native speakers frequently use in daily life, work, or casual conversation (incorporating common collocations or idioms). Avoid stiff, textbook-style, or awkward dictionary sentences. The Korean translation must be a direct, natural, contemporary sentence translation without any meta commentary, parenthetical notes, or explanation.";
+        const systemPrompt = "You are an expert American native English coach. Generate exactly ONE highly practical, authentic, and modern sentence that native speakers frequently use in daily life, work, or casual conversation. The generated sentence MUST BE COMPLETELY DIFFERENT from textbook or dictionary sentences. The Korean translation must be a direct, natural, contemporary sentence translation without any meta commentary or parenthetical notes.";
         const userPrompt = `Target Word/Expression: "${wordItem.english}" (Core meaning: "${wordItem.korean}").
-Create one high-frequency, natural conversational sentence showcasing how native speakers actually use this in real situations. Return a JSON object with keys "en" and "ko". "ko" must contain only the direct translation of the English sentence, absolutely no parenthetical explanations. Do not use markdown backticks.`;
+Exclude this existing sentence: "${wordItem.example || ''}".
+Create a completely different high-frequency, natural conversational sentence. Return a JSON object with keys "en" and "ko". Do not use markdown backticks.`;
 
         const response = await fetch(apiUrl, {
           method: 'POST',
@@ -814,9 +956,16 @@ Create one high-frequency, natural conversational sentence showcasing how native
         if (jsonText) {
           jsonText = jsonText.replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/```$/i, '').trim();
           const parsed = JSON.parse(jsonText);
+          let generatedEn = (parsed.en || parsed.english || "").trim();
+          
+          // 혹시라도 시트 예문과 똑같이 생성되었을 경우 강제 대체
+          if (!generatedEn || generatedEn.toLowerCase() === sheetEx) {
+            generatedEn = generateDistinctFallbackExample(wordItem.english, wordItem.example);
+          }
+
           const data = { 
-            en: parsed.en || parsed.english || wordItem.example || `Let's use "${wordItem.english}" in our conversation today.`, 
-            ko: (parsed.ko || parsed.korean || wordItem.exampleKo || "").replace(/\s*\(.*?쓰임새.*?\)\s*/g, '').trim()
+            en: generatedEn, 
+            ko: (parsed.ko || parsed.korean || "").replace(/\s*\(.*?쓰임새.*?\)\s*/g, '').trim()
           };
           if (!data.ko) {
             data.ko = await translateSentence(data.en);
@@ -829,13 +978,10 @@ Create one high-frequency, natural conversational sentence showcasing how native
           throw new Error("No candidate returned");
         }
       } catch (e) {
-        const fallbackSentence = (wordItem.example && wordItem.example !== "등록된 예문이 없습니다.")
-          ? wordItem.example
-          : `Native speakers often say: "It really helps to ${wordItem.english} whenever you face this situation."`;
-        
+        const fallbackSentence = generateDistinctFallbackExample(wordItem.english, wordItem.example);
         const fallback = {
           en: fallbackSentence,
-          ko: wordItem.exampleKo || await translateSentence(fallbackSentence)
+          ko: await translateSentence(fallbackSentence)
         };
         aiExampleCache.set(cleanKey, fallback);
         if (currentActiveItem && currentActiveItem.english.trim().toLowerCase() === cleanKey) {
@@ -1393,25 +1539,25 @@ Create one high-frequency, natural conversational sentence showcasing how native
     function addWordToAllDatabase(newItem) {
       if (!newItem || !newItem.english || newItem.english === '-' || newItem.english.trim() === '') return false;
       const cleanEng = newItem.english.trim();
-      const exists = allDictionaryWords.some(w => w.english.toLowerCase() === cleanEng.toLowerCase());
+      const cleanKey = cleanEng.toLowerCase();
+      const exists = allDictionaryWords.some(w => w.english.toLowerCase() === cleanKey);
       
-      const exEn = newItem.example || newItem.aiExample || '';
-      const exKo = newItem.exampleKo || newItem.nativeMeaning || '';
-      if (exEn) {
-        aiExampleCache.set(cleanEng.toLowerCase(), { en: exEn, ko: exKo });
+      // 시트 예문이 아닌 실제 AI 추천 예문인 경우에만 추천 예문 캐시에 등록
+      if (newItem.aiExample) {
+        aiExampleCache.set(cleanKey, { en: newItem.aiExample, ko: newItem.nativeMeaning || '' });
       }
 
       if (!exists) {
         const newEntry = {
           english: cleanEng,
           korean: (newItem.korean || '').trim(),
-          example: exEn,
-          exampleKo: exKo
+          example: newItem.example || newItem.aiExample || '',
+          exampleKo: newItem.exampleKo || newItem.nativeMeaning || ''
         };
         allDictionaryWords.push(newEntry);
 
         if (studyMode === 'all') {
-          if (!words.some(w => w.english.toLowerCase() === cleanEng.toLowerCase())) {
+          if (!words.some(w => w.english.toLowerCase() === cleanKey)) {
             words.push(newEntry);
             if (progressBar && progressText && totalWordCountBadge) {
               progressBar.style.width = `${((currentIndex + 1) / words.length) * 100}%`;
