@@ -1830,9 +1830,13 @@ Create a lively, authentic, modern American spoken sentence. Return a JSON objec
           // 바로 윗줄에 표시된 실제 영어 예문 문장 가져오기
           const sentenceAbove = aiExampleContent ? aiExampleContent.textContent.trim() : '';
           let meaning = aiExampleMeaning ? aiExampleMeaning.textContent.trim() : '';
-          
-          // 단어 뜻, 불완전 템플릿, 의심스러운 문자열이 남아있으면 실제 영문 문장 번역으로 실시간 대체
-          if (isSuspiciousTranslation(meaning)) {
+
+          // 1. All 모드이거나 현재 아이템에 완성된 1:1 문장 해석이 있다면 모바일 네트워크 지연 없이 즉각 표시
+          if (currentActiveItem && currentActiveItem.exampleKo && currentActiveItem.exampleKo.trim() !== '-' && !isSuspiciousTranslation(currentActiveItem.exampleKo)) {
+            meaning = currentActiveItem.exampleKo.trim();
+          } 
+          // 2. 캐시된 고품질 해석이 있는 경우
+          else if (isSuspiciousTranslation(meaning)) {
             const cleanKey = currentActiveItem?.english?.trim()?.toLowerCase();
             const cached = cleanKey ? aiExampleCache.get(cleanKey) : null;
             if (cached && cached.ko && !isSuspiciousTranslation(cached.ko)) {
