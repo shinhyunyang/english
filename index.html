@@ -720,17 +720,28 @@
       }
     }
 
-    // AI 예문 1문장 생성 및 캐싱
+    // AI 예문 1문장 생성 및 캐싱 (안전 파싱 및 즉각 Fallback 지원)
     async function loadCompanionAiExample(wordItem) {
-      const cacheKey = wordItem.english;
-      if (aiExampleCache.has(cacheKey)) {
-        displayAiExample(aiExampleCache.get(cacheKey));
+      if (!wordItem || !wordItem.english || wordItem.english === '-') return;
+      const cleanKey = wordItem.english.trim().toLowerCase();
+
+      // 1. 이미 캐시된 예문이 있으면 즉시 표시
+      if (aiExampleCache.has(cleanKey)) {
+        displayAiExample(aiExampleCache.get(cleanKey));
         return;
       }
 
-      // 초기 대기 텍스트
-      aiExampleContent.textContent = "원어민이 자주 쓰는 실전 표현 생성 중...";
-      aiExampleMeaning.textContent = "";
+      // 2. 단어 자체에 이미 좋은 실전 예문이 있는 경우(All 사전 등), 로딩 대기 없이 즉시 임시 표시
+      if (wordItem.example && wordItem.example !== "등록된 예문이 없습니다.") {
+        const initialExample = {
+          en: wordItem.example,
+          ko: wordItem.korean ? `("${wordItem.korean}"의 실제 회화 쓰임새)` : ""
+        };
+        displayAiExample(initialExample);
+      } else {
+        aiExampleContent.textContent = "원어민 실전 활용 예문 생성 중...";
+        aiExampleMeaning.textContent = "";
+      }
 
       try {
         const apiKey = "";
@@ -760,31 +771,43 @@ Create one high-frequency, natural conversational sentence showcasing how native
           })
         });
 
+        if (!response.ok) throw new Error("API call failed");
+
         const result = await response.json();
-        const jsonText = result?.candidates?.[0]?.content?.parts?.[0]?.text;
+        let jsonText = result?.candidates?.[0]?.content?.parts?.[0]?.text;
         if (jsonText) {
+          jsonText = jsonText.replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/```$/i, '').trim();
           const parsed = JSON.parse(jsonText);
-          const data = { en: parsed.en, ko: parsed.ko };
-          aiExampleCache.set(cacheKey, data);
-          if (words[currentIndex]?.english === cacheKey) {
+          const data = { 
+            en: parsed.en || parsed.english || wordItem.example || `Let's use "${wordItem.english}" in our conversation today.`, 
+            ko: parsed.ko || parsed.korean || `실제 일상 대화에서 자연스럽게 자주 쓰입니다.` 
+          };
+          aiExampleCache.set(cleanKey, data);
+          if (currentActiveItem && currentActiveItem.english.trim().toLowerCase() === cleanKey) {
             displayAiExample(data);
           }
         } else {
-          throw new Error();
+          throw new Error("No candidate returned");
         }
       } catch (e) {
+        // 네트워크 지연이나 제한 시 고품질 실전 회화 템플릿 즉각 적용
+        const fallbackSentence = (wordItem.example && wordItem.example !== "등록된 예문이 없습니다.")
+          ? wordItem.example
+          : `Native speakers often say: "It really helps to ${wordItem.english} whenever you face this situation."`;
+        
         const fallback = {
-          en: `In real life, people often say: "It's important to be ${wordItem.english} when dealing with everyday challenges."`,
-          ko: `실생활에서는 일상적인 문제를 다룰 때 이렇게 자연스럽게 쓰입니다.`
+          en: fallbackSentence,
+          ko: `실생활 대화 및 미드 등에서 빈출되는 실전 표현입니다.`
         };
-        aiExampleCache.set(cacheKey, fallback);
-        if (words[currentIndex]?.english === cacheKey) {
+        aiExampleCache.set(cleanKey, fallback);
+        if (currentActiveItem && currentActiveItem.english.trim().toLowerCase() === cleanKey) {
           displayAiExample(fallback);
         }
       }
     }
 
     function displayAiExample(data) {
+      if (!data) return;
       aiExampleContent.textContent = data.en || "-";
       aiExampleMeaning.textContent = data.ko || "";
     }
