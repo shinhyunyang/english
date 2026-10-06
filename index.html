@@ -482,14 +482,16 @@
     let sheetWords = [...FALLBACK_WORDS];
     let allDictionaryWords = [];
 
-    // --- 미국인 최빈출 핵심 구동사 풀 (Top High-Frequency Phrasal Verbs) ---
-    const CORE_AMERICAN_PHRASAL_VERBS = [
+    // =========================================================================
+    // 1. 구동사 (Phrasal Verbs) 마스터 풀
+    // =========================================================================
+    const CATEGORY_PHRASAL_VERBS = [
       { en: "figure out", ko: "알아내다, 생각해내다", ex: "I can't figure out why this code isn't working.", koEx: "이 코드가 왜 안 돌아가는지 도저히 알아낼 수가 없어." },
       { en: "come up with", ko: "생각해내다, 제안하다", ex: "She came up with a brilliant idea for the marketing campaign.", koEx: "그녀는 마케팅 캠페인을 위한 기발한 아이디어를 생각해냈습니다." },
       { en: "run into", ko: "우연히 마주치다", ex: "I ran into an old college friend at the coffee shop today.", koEx: "오늘 카페에서 대학교 때 친구를 우연히 마주쳤어." },
       { en: "end up", ko: "결국 ~하게 되다", ex: "We ended up ordering pizza because nobody wanted to cook.", koEx: "다들 요리하기 귀찮아해서 우리는 결국 피자를 시켜 먹게 되었어." },
       { en: "catch up", ko: "밀린 이야기를 나누다, 따라잡다", ex: "Let's grab lunch this Friday and catch up.", koEx: "이번 주 금요일에 점심 먹으면서 그동안 밀린 이야기나 나누자." },
-      { en: "look forward to", ko: "~을 고대하다, 기대하다", ex: "I'm really looking forward to our weekend road trip.", koEx: "우리 주말 드라이브 여행이 정말 너무 기대돼." },
+      { en: "look forward to", ko: "~을 고대하다, 손꼽아 기다리다", ex: "I'm really looking forward to our weekend road trip.", koEx: "우리 주말 드라이브 여행이 정말 너무 기대돼." },
       { en: "give up", ko: "포기하다, 그만두다", ex: "Don't give up just because it's difficult at the beginning.", koEx: "초반에 좀 어렵다고 해서 쉽게 포기하지 마." },
       { en: "check out", ko: "확인해보다, 살펴보다", ex: "You should definitely check out that new bakery downtown.", koEx: "시내에 새로 생긴 그 빵집 꼭 한번 가보고 확인해봐." },
       { en: "call off", ko: "취소하다", ex: "They had to call off the soccer match due to heavy rain.", koEx: "폭우 때문에 축구 경기를 전격 취소해야만 했습니다." },
@@ -517,7 +519,6 @@
       { en: "keep up with", ko: "따라잡다, 뒤처지지 않다", ex: "It's hard to keep up with the latest technological changes.", koEx: "최신 기술 변화를 뒤처지지 않고 계속 따라잡는 것은 쉽지 않습니다." },
       { en: "settle down", ko: "진정하다, 정착하다", ex: "After traveling for years, she finally decided to settle down.", koEx: "수년간 여행을 다닌 후, 그녀는 마침내 한곳에 정착하기로 결심했습니다." },
       { en: "take after", ko: "~을 닮다", ex: "He really takes after his father in both looks and temperament.", koEx: "그는 외모와 성격 모두에서 아버지를 정말 쏙 빼닮았습니다." },
-      { en: "run out", ko: "다 떨어지다, 바닥나다", ex: "Our patience is starting to run out.", koEx: "우리의 인내심도 슬슬 바닥나기 시작하고 있어." },
       { en: "stand out", ko: "눈에 띄다, 두드러지다", ex: "Her creative resume really stood out from the crowd.", koEx: "그녀의 창의적인 이력서는 수많은 지원자들 사이에서 단연 눈에 띄었습니다." },
       { en: "break down", ko: "고장 나다, 감정이 무너지다", ex: "My car broke down right in the middle of rush hour traffic.", koEx: "출퇴근 혼잡 시간 한가운데에서 내 차가 고장이 나 버렸어." },
       { en: "call on", ko: "지목하다, 요청하다", ex: "The professor called on me to answer the first question.", koEx: "교수님께서 첫 번째 질문에 답하라고 나를 지목하셨어." },
@@ -529,15 +530,56 @@
       { en: "go over", ko: "검토하다, 꼼꼼히 살피다", ex: "Let's go over the proposal one more time before sending it.", koEx: "제안서를 전송하기 전에 다시 한번 꼼꼼하게 검토해 봅시다." },
       { en: "iron out", ko: "문제를 해결하다, 원만히 조율하다", ex: "We met briefly to iron out the remaining contractual details.", koEx: "우리는 남아 있는 계약상 세부 사항들을 원만히 조율하기 위해 잠깐 만났습니다." },
       { en: "look up", ko: "찾아보다, 상황이 나아지다", ex: "Business was slow, but things are finally looking up.", koEx: "장사가 좀 뜸했었는데, 드디어 상황이 전반적으로 나아지고 있어." },
-      { en: "make up for", ko: "만회하다, 보상하다", ex: "He worked overtime all weekend to make up for lost time.", koEx: "그는 허비한 시간을 만회하기 위해 주말 내내 야근을 했습니다." },
-      { en: "pay off", ko: "결실을 맺다, 빚을 다 갚다", ex: "All those long nights of studying eventually paid off.", koEx: "밤을 새워가며 공부했던 그 수많은 날들이 결국 값진 결실을 맺었습니다." },
+      { en: "pay off", ko: "결실을 맺다, 보답을 받다", ex: "All those long nights of studying eventually paid off.", koEx: "밤을 새워가며 공부했던 그 수많은 날들이 결국 값진 결실을 맺었습니다." },
       { en: "pull off", ko: "어려운 일을 해내다", ex: "Nobody believed we could launch on time, but we pulled it off.", koEx: "제시간에 출시할 수 있을 거라 아무도 믿지 않았지만, 우리는 결국 해냈습니다." },
       { en: "show off", ko: "자랑하다, 뽐내다", ex: "He loves to show off his new sports car to everyone.", koEx: "그는 모든 사람들에게 자신의 새 스포츠카를 자랑하는 걸 정말 좋아합니다." },
-      { en: "tear down", ko: "철거하다, 허물다", ex: "The city plans to tear down the abandoned factory downtown.", koEx: "시는 도심의 방치된 폐공장을 전면 철거할 계획입니다." }
+      { en: "look up to", ko: "존경하다, 우러러보다", ex: "Young athletes always look up to their veteran captains.", koEx: "어린 운동선수들은 언제나 베테랑 주장들을 존경하고 우러러봅니다." },
+      { en: "look down on", ko: "무시하다, 깔보다", ex: "Never look down on someone just because they are inexperienced.", koEx: "단지 경험이 부족하다는 이유로 남을 결코 깔보거나 무시하지 마세요." },
+      { en: "look out for", ko: "~을 보살피다, 주의하다", ex: "We need to look out for each other during the rough winter.", koEx: "혹독한 겨울 동안 우리는 서로를 잘 보살피고 챙겨주어야 합니다." },
+      { en: "look back on", ko: "뒤돌아보다, 회상하다", ex: "I look back on my college days with great fondness.", koEx: "나는 대학 시절을 대단히 따뜻하고 행복한 마음으로 뒤돌아봅니다." },
+      { en: "put away", ko: "제자리에 정리하다, 치우다", ex: "Please put away your laptop before we have dinner.", koEx: "우리 저녁 식사하기 전에 노트북 좀 제자리에 치워줘." },
+      { en: "put together", ko: "조립하다, 짜 맞추다", ex: "It took us three hours to put together the new bookshelf.", koEx: "새 책장을 조립하고 완성하는 데 세 시간이 걸렸습니다." },
+      { en: "get through", ko: "헤쳐 나가다, 연락이 닿다", ex: "She helped her friend get through a painful breakup.", koEx: "그녀는 친구가 가슴 아픈 이별을 잘 헤쳐 나갈 수 있도록 도왔습니다." },
+      { en: "get rid of", ko: "없애다, 처분하다", ex: "We decided to get rid of old clutter in the basement.", koEx: "우리는 지하실에 쌓인 오래된 잡동사니들을 처분하기로 결정했습니다." },
+      { en: "get by", ko: "그럭저럭 살아내다, 근근이 버티다", ex: "My Spanish isn't fluent, but I know enough to get by.", koEx: "내 스페인어가 유창하진 않지만, 그럭저럭 소통하며 버틸 정도는 돼." },
+      { en: "get around to", ko: "차일피일 미루다 드디어 ~하다", ex: "I finally got around to cleaning out the messy garage.", koEx: "미루고 미루다 드디어 난장판이던 차고를 청소하게 되었습니다." },
+      { en: "get away with", ko: "처벌받지 않고 무사히 넘어가다", ex: "Nobody should get away with breaking safety rules.", koEx: "그 누구도 안전 수칙을 어기고 그냥 무사히 넘어가서는 안 됩니다." },
+      { en: "take off", ko: "이륙하다, 사업이 급성장하다", ex: "Her e-commerce startup really began to take off last year.", koEx: "그녀의 이커머스 스타트업은 작년에 본격적으로 급성장하기 시작했습니다." },
+      { en: "take over", ko: "인계받다, 장악하다", ex: "A new management team will take over operations next month.", koEx: "다음 달부터 새로운 경영진이 전체 운영을 인계받을 예정입니다." },
+      { en: "take on", ko: "책임이나 일을 떠맡다", ex: "Don't take on more responsibilities than you can handle.", koEx: "스스로 감당할 수 있는 것 이상의 과도한 책임을 떠맡지 마세요." },
+      { en: "take apart", ko: "분해하다, 낱낱이 파헤치다", ex: "The engineer took apart the motor to inspect each component.", koEx: "엔지니어는 각 부품을 점검하기 위해 모터를 완전히 분해했습니다." },
+      { en: "come down with", ko: "가벼운 질병에 걸리다", ex: "I think I'm coming down with a mild sore throat.", koEx: "목이 좀 따끔거리는 게 가벼운 감기에 걸리려는 것 같아." },
+      { en: "come along", ko: "함께 가다, 순조롭게 진행되다", ex: "How is your new book project coming along?", koEx: "새로 준비하는 책 출간 프로젝트는 순조롭게 잘 진행되고 있나요?" },
+      { en: "come through", ko: "약속을 지켜내다, 해내다", ex: "When we urgently needed funds, Sarah really came through for us.", koEx: "우리가 자금이 절실히 필요했을 때 사라가 정말 큰 힘이 되어주었습니다." },
+      { en: "bring about", ko: "야기하다, 변화를 초래하다", ex: "Technological innovation will bring about profound societal changes.", koEx: "기술 혁신은 대단히 심오한 사회적 변화를 초래할 것입니다." },
+      { en: "turn down", ko: "거절하다, 소리를 줄이다", ex: "He reluctantly decided to turn down the low job offer.", koEx: "그는 조건이 낮은 입사 제안을 고심 끝에 정중히 거절했습니다." },
+      { en: "turn up", ko: "뜻밖에 나타나다, 음량을 높이다", ex: "My lost keys surprisingly turned up under the car seat.", koEx: "잃어버렸던 내 차 열쇠가 뜻밖에도 자동차 시트 밑에서 나왔어." },
+      { en: "break into", ko: "침입하다, 새로운 시장에 진출하다", ex: "The fashion brand is attempting to break into overseas markets.", koEx: "그 패션 브랜드는 해외 시장에 본격 진출하기 위해 시도 중입니다." },
+      { en: "carry on", ko: "계속해 나가다", ex: "Despite unexpected hurdles, we must carry on with our mission.", koEx: "예상치 못한 난관에도 불구하고 우리는 우리의 사명을 계속 밀고 나가야 합니다." },
+      { en: "fall behind", ko: "뒤처지다, 낙오하다", ex: "He had to study double shifts so he wouldn't fall behind his peers.", koEx: "그는 동료들에게 뒤처지지 않기 위해 두 배로 열심히 공부해야 했습니다." },
+      { en: "fall through", ko: "계획이나 거래가 무산되다", ex: "The real estate transaction unfortunately fell through at the last minute.", koEx: "부동산 거래가 안타깝게도 마지막 순간에 무산되어 버렸습니다." },
+      { en: "hold up", ko: "지연시키다, 버텨내다", ex: "Heavy airport snow held up dozens of international flights.", koEx: "공항의 폭설로 인해 수십 편의 국제선 비행기가 지연되었습니다." },
+      { en: "stand up for", ko: "~을 옹호하다, 당당히 맞서다", ex: "Always have the courage to stand up for unfair treatment.", koEx: "부당한 대우에 직면했을 때는 언제나 당당하게 맞서고 옹호할 용기를 가지세요." },
+      { en: "rule out", ko: "배제하다, 고려에서 제외하다", ex: "Doctors immediately ruled out any serious spinal injury.", koEx: "의사들은 심각한 척추 부상 가능성을 즉시 배제했습니다." },
+      { en: "work out", ko: "일이 잘 풀리다, 운동하다", ex: "Don't stress too much; everything will work out just fine.", koEx: "너무 스트레스받지 마; 모든 일이 결국 다 잘 풀릴 테니까." },
+      { en: "sort out", ko: "문제를 정리하다, 해결하다", ex: "Let's sit down together and sort out the scheduling conflict.", koEx: "우리 함께 마주 앉아서 꼬인 일정 문제를 차분히 정리해 봅시다." },
+      { en: "clear up", ko: "날씨가 개다, 오해를 풀다", ex: "I met with him directly to clear up any misunderstanding.", koEx: "나는 사소한 오해라도 말끔히 풀기 위해 그를 직접 만났습니다." },
+      { en: "show up", ko: "모습을 드러내다, 나타나다", ex: "More than a hundred eager attendees showed up for the tech seminar.", koEx: "백 명이 넘는 열정적인 참가자들이 기술 세미나에 모습을 드러냈습니다." },
+      { en: "burn out", ko: "에너지가 방전되다, 지치다", ex: "Working without breaks will cause you to burn out very quickly.", koEx: "휴식 없이 일만 하다 보면 대단히 빠르게 번아웃이 오고 방전될 것입니다." },
+      { en: "chip in", ko: "각자 조금씩 돈이나 힘을 보태다", ex: "We all chipped in twenty dollars to buy her a retirement gift.", koEx: "우리는 그녀의 퇴직 선물을 사기 위해 다 함께 20달러씩 돈을 모았습니다." },
+      { en: "zone out", ko: "멍때리다, 넋을 놓다", ex: "I was so exhausted during the lecture that I completely zoned out.", koEx: "강의 중에 너무 피곤한 나머지 나도 모르게 완전히 멍을 때리고 말았어." },
+      { en: "freak out", ko: "기겁하다, 패닉에 빠지다", ex: "Don't freak out; it's just a harmless software glitch.", koEx: "기겁하고 놀라지 마; 그건 그냥 해가 없는 단순 소프트웨어 오류일 뿐이야." },
+      { en: "chime in", ko: "대화에 불쑥 끼어들다, 의견을 보태다", ex: "Feel free to chime in whenever you have a constructive idea.", koEx: "건설적인 아이디어가 있을 때는 언제든 대화에 편하게 의견을 보태주세요." },
+      { en: "bail out", ko: "곤경에서 구해내다, 손을 털다", ex: "The government intervened to bail out the regional bank.", koEx: "정부는 그 지방 은행을 위기에서 구제하기 위해 전격 개입했습니다." },
+      { en: "set off", ko: "출발하다, 촉발하다", ex: "A small spark was enough to set off the sensitive fire alarm.", koEx: "작은 불꽃 하나가 민감한 화재경보기를 울리게 하기에 충분했습니다." },
+      { en: "sign up for", ko: "신청하다, 등록하다", ex: "I decided to sign up for an advanced graphic design workshop.", koEx: "나는 고급 그래픽 디자인 워크숍에 등록하기로 결정했습니다." },
+      { en: "warm up to", ko: "~에 마음을 열다, 호감을 갖다", ex: "It took the team some time to warm up to the new management style.", koEx: "팀원들이 새로운 경영 스타일에 마음을 열기까지는 다소 시간이 걸렸습니다." }
     ];
 
-    // --- 미국인 최빈출 필수 관용구 및 일상 이디엄 (Top Everyday Idioms & Colloquialisms) ---
-    const AMERICAN_TOP_COLLOQUIAL_IDIOMS = [
+    // =========================================================================
+    // 2. 관용구 / 이디엄 (Idioms & Colloquialisms) 마스터 풀
+    // =========================================================================
+    const CATEGORY_IDIOMS = [
       { en: "no-brainer", ko: "쉬운 결정, 고민할 필요도 없는 일", ex: "Accepting that full scholarship was an absolute no-brainer.", koEx: "전액 장학금을 수락하는 건 정말 전혀 고민할 필요조차 없는 당연한 결정이었어." },
       { en: "hit the nail on the head", ko: "정곡을 찌르다, 정확히 맞히다", ex: "Her analysis of the market hit the nail on the head.", koEx: "시장에 대한 그녀의 분석은 아주 정확하게 정곡을 찔렀습니다." },
       { en: "play it by ear", ko: "상황 봐서 즉흥적으로 결정하다", ex: "We don't have a strict itinerary; let's just play it by ear.", koEx: "엄격한 일정표는 없으니까, 그냥 그날그날 상황 봐서 편하게 결정하자." },
@@ -568,73 +610,13 @@
       { en: "break the ice", ko: "서먹서먹한 어색한 분위기를 깨다", ex: "He told a lighthearted joke to break the ice before the presentation.", koEx: "그는 발표를 시작하기 전 어색한 분위기를 풀기 위해 가벼운 농담을 던졌습니다." },
       { en: "on a roll", ko: "연전연승하며 승승장구하는", ex: "Our design team has been on a roll with awards this quarter.", koEx: "저희 디자인팀은 이번 분기에 여러 상을 휩쓸며 완전 승승장구하고 있습니다." },
       { en: "keep one's chin up", ko: "기죽지 않고 용기를 잃지 않다", ex: "Keep your chin up; tomorrow is a brand new opportunity.", koEx: "기죽지 말고 고개를 들어요. 내일은 또 다른 새로운 기회가 찾아올 테니까요." },
-      { en: "by all means", ko: "아무렴, 기꺼이, 얼마든지", ex: "If you need an extra set of hands, by all means ask me.", koEx: "추가로 일손이 필요하다면 아무렴 얼마든지 나한테 요청해." },
-      { en: "in the long run", ko: "장기적인 관점에서 보면", ex: "Investing in education always pays off in the long run.", koEx: "교육에 투자하는 것은 장기적인 관점에서 보면 언제나 큰 결실을 맺습니다." },
       { en: "up in the air", ko: "아직 결정되지 않고 불확실한", ex: "Our vacation plans are still up in the air due to flight costs.", koEx: "항공료 문제 때문에 우리 휴가 계획은 아직 완전히 미정 상태입니다." },
       { en: "ring a bell", ko: "어디서 들어본 기억이 나다", ex: "That restaurant name rings a bell, but I haven't been there.", koEx: "그 식당 이름이 어디서 들어본 기억은 나는데, 직접 가본 적은 없어." },
       { en: "call the shots", ko: "지휘권을 쥐다, 주도하다", ex: "The founder still calls the shots on all product roadmaps.", koEx: "창업자가 여전히 모든 제품 로드맵에 대한 최종 결정권을 쥐고 있습니다." },
       { en: "across the board", ko: "전면적으로, 일괄적으로", ex: "The company announced salary increases across the board.", koEx: "회사는 전 직원을 대상으로 일괄적인 급여 인상을 전격 발표했습니다." },
       { en: "at the eleventh hour", ko: "마지막 순간에, 마감 직전에", ex: "A critical bug was discovered at the eleventh hour before launch.", koEx: "출시 직전 마지막 순간에 치명적인 버그가 발견되었습니다." },
       { en: "cost an arm and a leg", ko: "터무니없이 엄청나게 비싸다", ex: "Upgrading to first-class seats would cost an arm and a leg.", koEx: "일등석 좌석으로 업그레이드하려면 엄청난 거금이 들 것입니다." },
-      { en: "a piece of cake", ko: "식은 죽 먹기, 아주 쉬운 일", ex: "Once you understand the basic formula, the test is a piece of cake.", koEx: "기본 공식만 한번 이해하고 나면, 그 시험은 식은 죽 먹기나 다름없습니다." }
-    ];
-
-    // --- 미국 현지 실생활 빈출 구동사 2차 확장 세트 (60개) ---
-    const EXTENDED_AMERICAN_PHRASAL_VERBS = [
-      { en: "look up to", ko: "존경하다, 우러러보다", ex: "Young athletes always look up to their veteran captains.", koEx: "어린 운동선수들은 언제나 베테랑 주장들을 존경하고 우러러봅니다." },
-      { en: "look down on", ko: "무시하다, 깔보다", ex: "Never look down on someone just because they are inexperienced.", koEx: "단지 경험이 부족하다는 이유로 남을 결코 깔보거나 무시하지 마세요." },
-      { en: "look out for", ko: "~을 보살피다, 주의하다", ex: "We need to look out for each other during the rough winter.", koEx: "혹독한 겨울 동안 우리는 서로를 잘 보살피고 챙겨주어야 합니다." },
-      { en: "look back on", ko: "뒤돌아보다, 회상하다", ex: "I look back on my college days with great fondness.", koEx: "나는 대학 시절을 대단히 따뜻하고 행복한 마음으로 뒤돌아봅니다." },
-      { en: "put away", ko: "제자리에 정리하다, 치우다", ex: "Please put away your laptop before we have dinner.", koEx: "우리 저녁 식사하기 전에 노트북 좀 제자리에 치워줘." },
-      { en: "put together", ko: "조립하다, 짜 맞추다", ex: "It took us three hours to put together the new bookshelf.", koEx: "새 책장을 조립하고 완성하는 데 세 시간이 걸렸습니다." },
-      { en: "get through", ko: "헤쳐 나가다, 연락이 닿다", ex: "She helped her friend get through a painful breakup.", koEx: "그녀는 친구가 가슴 아픈 이별을 잘 헤쳐 나갈 수 있도록 도왔습니다." },
-      { en: "get rid of", ko: "없애다, 처분하다", ex: "We decided to get rid of old clutter in the basement.", koEx: "우리는 지하실에 쌓인 오래된 잡동사니들을 처분하기로 결정했습니다." },
-      { en: "get by", ko: "그럭저럭 살아내다, 근근이 버티다", ex: "My Spanish isn't fluent, but I know enough to get by.", koEx: "내 스페인어가 유창하진 않지만, 그럭저럭 소통하며 버틸 정도는 돼." },
-      { en: "get around to", ko: "차일피일 미루다 드디어 ~하다", ex: "I finally got around to cleaning out the messy garage.", koEx: "미루고 미루다 드디어 난장판이던 차고를 청소하게 되었습니다." },
-      { en: "get away with", ko: "처벌받지 않고 무사히 넘어가다", ex: "Nobody should get away with breaking safety rules.", koEx: "그 누구도 안전 수칙을 어기고 그냥 무사히 넘어가서는 안 됩니다." },
-      { en: "take off", ko: "이륙하다, 사업이 급성장하다", ex: "Her e-commerce startup really began to take off last year.", koEx: "그녀의 이커머스 스타트업은 작년에 본격적으로 급성장하기 시작했습니다." },
-      { en: "take over", ko: "인계받다, 장악하다", ex: "A new management team will take over operations next month.", koEx: "다음 달부터 새로운 경영진이 전체 운영을 인계받을 예정입니다." },
-      { en: "take on", ko: "책임이나 일을 떠맡다", ex: "Don't take on more responsibilities than you can handle.", koEx: "스스로 감당할 수 있는 것 이상의 과도한 책임을 떠맡지 마세요." },
-      { en: "take apart", ko: "분해하다, 낱낱이 파헤치다", ex: "The engineer took apart the motor to inspect each component.", koEx: "엔지니어는 각 부품을 점검하기 위해 모터를 완전히 분해했습니다." },
-      { en: "take aback", ko: "깜짝 놀라게 하다, 당황하게 하다", ex: "I was taken aback by his blunt and unexpected criticism.", koEx: "그의 거침없고 예상치 못한 비판에 나는 적잖이 당황했습니다." },
-      { en: "come down with", ko: "가벼운 질병에 걸리다", ex: "I think I'm coming down with a mild sore throat.", koEx: "목이 좀 따끔거리는 게 가벼운 감기에 걸리려는 것 같아." },
-      { en: "come along", ko: "함께 가다, 순조롭게 진행되다", ex: "How is your new book project coming along?", koEx: "새로 준비하는 책 출간 프로젝트는 순조롭게 잘 진행되고 있나요?" },
-      { en: "come through", ko: "약속을 지켜내다, 해내다", ex: "When we urgently needed funds, Sarah really came through for us.", koEx: "우리가 자금이 절실히 필요했을 때 사라가 정말 큰 힘이 되어주었습니다." },
-      { en: "give away", ko: "거저 주다, 비밀을 누설하다", ex: "Please don't give away the ending of the mystery novel.", koEx: "그 추리 소설의 결말을 제발 미리 누설하지 마세요." },
-      { en: "bring about", ko: "야기하다, 변화를 초래하다", ex: "Technological innovation will bring about profound societal changes.", koEx: "기술 혁신은 대단히 심오한 사회적 변화를 초래할 것입니다." },
-      { en: "turn down", ko: "거절하다, 소리를 줄이다", ex: "He reluctantly decided to turn down the low job offer.", koEx: "그는 조건이 낮은 입사 제안을 고심 끝에 정중히 거절했습니다." },
-      { en: "turn up", ko: "뜻밖에 나타나다, 음량을 높이다", ex: "My lost keys surprisingly turned up under the car seat.", koEx: "잃어버렸던 내 차 열쇠가 뜻밖에도 자동차 시트 밑에서 나왔어." },
-      { en: "call for", ko: "공개 요구하다, 필요로 하다", ex: "The current economic crisis calls for bold fiscal policy.", koEx: "현재의 경제 위기는 과감한 재정 정책을 절실히 필요로 합니다." },
-      { en: "break into", ko: "침입하다, 새로운 시장에 진출하다", ex: "The fashion brand is attempting to break into overseas markets.", koEx: "그 패션 브랜드는 해외 시장에 본격 진출하기 위해 시도 중입니다." },
-      { en: "break out", ko: "갑자기 발생하다, 탈출하다", ex: "A sudden wildfire broke out in the dry forest yesterday.", koEx: "어제 건조한 숲속에서 갑작스러운 산불이 발생했습니다." },
-      { en: "make up", ko: "화해하다, 지어내다", ex: "They had a minor quarrel yesterday, but they quickly made up.", koEx: "그들은 어제 사소한 말다툼을 벌였지만, 곧바로 화해했습니다." },
-      { en: "make out", ko: "간신히 알아보다, 이해하다", ex: "I could barely make out the distant highway sign through the fog.", koEx: "짙은 안개 속에서 멀리 있는 고속도로 표지판을 간신히 알아볼 수 있었어." },
-      { en: "make sense of", ko: "~을 이해하다, 갈피를 잡다", ex: "I'm trying to make sense of these complex financial charts.", koEx: "나는 이 복잡한 재무 도표들의 갈피를 잡고 이해하려고 애쓰고 있어." },
-      { en: "carry on", ko: "계속해 나가다", ex: "Despite unexpected hurdles, we must carry on with our mission.", koEx: "예상치 못한 난관에도 불구하고 우리는 우리의 사명을 계속 밀고 나가야 합니다." },
-      { en: "fall behind", ko: "뒤처지다, 낙오하다", ex: "He had to study double shifts so he wouldn't fall behind his peers.", koEx: "그는 동료들에게 뒤처지지 않기 위해 두 배로 열심히 공부해야 했습니다." },
-      { en: "fall through", ko: "계획이나 거래가 무산되다", ex: "The real estate transaction unfortunately fell through at the last minute.", koEx: "부동산 거래가 안타깝게도 마지막 순간에 무산되어 버렸습니다." },
-      { en: "fall apart", ko: "산산조각 나다, 무너지다", ex: "Their partnership began to fall apart over money disagreements.", koEx: "금전적 불화로 인해 그들의 파트너십은 서서히 와해되기 시작했습니다." },
-      { en: "hold up", ko: "지연시키다, 버텨내다", ex: "Heavy airport snow held up dozens of international flights.", koEx: "공항의 폭설로 인해 수십 편의 국제선 비행기가 지연되었습니다." },
-      { en: "hold back", ko: "자제하다, 망설이다", ex: "She held back her tears while delivering the emotional farewell speech.", koEx: "그녀는 감동적인 작별 인사를 전하는 동안 눈물을 애써 참았습니다." },
-      { en: "stand up for", ko: "~을 옹호하다, 당당히 맞서다", ex: "Always have the courage to stand up for unfair treatment.", koEx: "부당한 대우에 직면했을 때는 언제나 당당하게 맞서고 옹호할 용기를 가지세요." },
-      { en: "stand by", ko: "대기하다, 곁에서 지지하다", ex: "A loyal partner will stand by you through thick and thin.", koEx: "진정한 동반자는 기쁠 때나 슬플 때나 변함없이 곁에서 지지해 줄 것입니다." },
-      { en: "check up on", ko: "안부를 확인하다, 점검하다", ex: "I called my elderly parents to check up on their health.", koEx: "나는 부모님의 건강 안부를 여쭙고 챙겨드리기 위해 전화를 드렸습니다." },
-      { en: "rule out", ko: "배제하다, 고려에서 제외하다", ex: "Doctors immediately ruled out any serious spinal injury.", koEx: "의사들은 심각한 척추 부상 가능성을 즉시 배제했습니다." },
-      { en: "work out", ko: "일이 잘 풀리다, 운동하다", ex: "Don't stress too much; everything will work out just fine.", koEx: "너무 스트레스받지 마; 모든 일이 결국 다 잘 풀릴 테니까." },
-      { en: "sort out", ko: "문제를 정리하다, 해결하다", ex: "Let's sit down together and sort out the scheduling conflict.", koEx: "우리 함께 마주 앉아서 꼬인 일정 문제를 차분히 정리해 봅시다." },
-      { en: "clear up", ko: "날씨가 개다, 오해를 풀다", ex: "I met with him directly to clear up any misunderstanding.", koEx: "나는 사소한 오해라도 말끔히 풀기 위해 그를 직접 만났습니다." },
-      { en: "show up", ko: "모습을 드러내다, 나타나다", ex: "More than a hundred eager attendees showed up for the tech seminar.", koEx: "백 명이 넘는 열정적인 참가자들이 기술 세미나에 모습을 드러냈습니다." },
-      { en: "burn out", ko: "에너지가 방전되다, 지치다", ex: "Working without breaks will cause you to burn out very quickly.", koEx: "휴식 없이 일만 하다 보면 대단히 빠르게 번아웃이 오고 방전될 것입니다." },
-      { en: "chip in", ko: "각자 조금씩 돈이나 힘을 보태다", ex: "We all chipped in twenty dollars to buy her a retirement gift.", koEx: "우리는 그녀의 퇴직 선물을 사기 위해 다 함께 20달러씩 돈을 모았습니다." },
-      { en: "zone out", ko: "멍때리다, 넋을 놓다", ex: "I was so exhausted during the lecture that I completely zoned out.", koEx: "강의 중에 너무 피곤한 나머지 나도 모르게 완전히 멍을 때리고 말았어." },
-      { en: "freak out", ko: "기겁하다, 패닉에 빠지다", ex: "Don't freak out; it's just a harmless software glitch.", koEx: "기겁하고 놀라지 마; 그건 그냥 해가 없는 단순 소프트웨어 오류일 뿐이야." },
-      { en: "chime in", ko: "대화에 불쑥 끼어들다, 의견을 보태다", ex: "Feel free to chime in whenever you have a constructive idea.", koEx: "건설적인 아이디어가 있을 때는 언제든 대화에 편하게 의견을 보태주세요." },
-      { en: "bail out", ko: "곤경에서 구해내다, 손을 털다", ex: "The government intervened to bail out the regional bank.", koEx: "정부는 그 지방 은행을 위기에서 구제하기 위해 전격 개입했습니다." },
-      { en: "iron out", ko: "원만히 매듭짓다", ex: "We managed to iron out our differences over lunch.", koEx: "우리는 점심을 함께 먹으며 서로의 이견을 원만하게 매듭지었습니다." }
-    ];
-
-    // --- 미국 현지 실생활 회화 관용구 & 핵심 표현 추가 세트 (40개) ---
-    const EXTENDED_AMERICAN_IDIOMS = [
+      { en: "a piece of cake", ko: "식은 죽 먹기, 아주 쉬운 일", ex: "Once you understand the basic formula, the test is a piece of cake.", koEx: "기본 공식만 한번 이해하고 나면, 그 시험은 식은 죽 먹기나 다름없습니다." },
       { en: "elephant in the room", ko: "모두가 알면서도 꺼리는 껄끄러운 문제", ex: "Let's finally address the elephant in the room regarding the budget.", koEx: "예산과 관련해 모두가 입을 닫고 있는 그 껄끄러운 문제를 이제 정면으로 다룹시다." },
       { en: "blessing in disguise", ko: "전화위복, 뜻밖의 좋은 일", ex: "Losing that entry-level job proved to be a blessing in disguise.", koEx: "그 초임 일자리를 잃었던 것이 결과적으로는 대단한 전화위복이 되었습니다." },
       { en: "the ball is in your court", ko: "결정이나 행동할 차례가 상대방에게 있다", ex: "I sent over the revised agreement, so the ball is in your court.", koEx: "수정 합의서를 이미 넘겨드렸으니, 이제 결정은 당신의 손에 달려 있습니다." },
@@ -643,7 +625,6 @@
       { en: "speak of the devil", ko: "호랑이도 제 말 하면 온다더니", ex: "Speak of the devil! We were just talking about your promotion.", koEx: "호랑이도 제 말 하면 온다더니! 우리 방금 너의 승진 얘기하고 있었는데." },
       { en: "beat around the bush", ko: "빙빙 돌려 말하다, 요점을 피하다", ex: "Stop beating around the bush and tell me what really happened.", koEx: "요점을 피해서 빙빙 돌려 말하지 말고, 대체 무슨 일이 있었는지 솔직히 말해줘." },
       { en: "cold feet", ko: "막판에 드는 두려움이나 망설임", ex: "She got cold feet right before walking up to the public podium.", koEx: "그녀는 대중 연단에 올라서기 직전에 극심한 긴장과 망설임이 들었습니다." },
-      { en: "off the top of my head", ko: "지금 당장 기억나는 바로는", ex: "Off the top of my head, I think our flight departs around 8 AM.", koEx: "지금 당장 생각나는 바로는 우리 비행기가 아침 8시경 출발할 거야." },
       { en: "face the music", ko: "자신의 잘못에 대해 당당히 대가를 치르다", ex: "He made a mistake on the accounting audit and had to face the music.", koEx: "그는 회계 감사에서 실수를 저질렀고 그에 대한 책임을 당당히 감수해야 했습니다." },
       { en: "hang in there", ko: "포기하지 않고 끝까지 버티다", ex: "Hang in there; the hardest part of the sprint is almost over.", koEx: "조금만 더 힘내고 버텨봐; 이번 스프린트에서 가장 힘든 고비는 거의 끝났어." },
       { en: "so far so good", ko: "지금까지는 순조롭다", ex: "We just finished week one of the launch, and so far so good.", koEx: "출시 첫 주가 방금 끝났는데, 지금까지는 아주 순조롭게 잘 굴러가고 있어." },
@@ -657,13 +638,77 @@
       { en: "bottom line", ko: "핵심 요지, 최종 손익", ex: "The bottom line is that we need to improve customer retention.", koEx: "핵심 요지는 우리가 고객 유지율을 반드시 끌어올려야 한다는 점입니다." }
     ];
 
-    // 미국인 최빈출 어휘·구동사·관용구 3,000개 완충 생성기
+    // =========================================================================
+    // 3. 필수 관용표현 (Essential Colloquial Phrases) 마스터 풀
+    // =========================================================================
+    const CATEGORY_COLLOQUIAL_PHRASES = [
+      { en: "in a nutshell", ko: "아주 간단히 요약하자면", ex: "In a nutshell, we need to redesign the entire checkout flow.", koEx: "아주 간단히 요약하자면, 결제 진행 화면 전체를 다시 디자인해야 합니다." },
+      { en: "from scratch", ko: "처음부터 맨땅에서, 아무것도 없이", ex: "She built her thriving online bakery completely from scratch.", koEx: "그녀는 아무런 기반도 없이 처음부터 맨땅에서 번창하는 온라인 베이커리를 일궈냈습니다." },
+      { en: "keep an eye on", ko: "~을 주의 깊게 지켜보다", ex: "Could you please keep an eye on my backpack while I grab water?", koEx: "내가 물 좀 떠 오는 동안 내 가방 좀 주의 깊게 지켜봐 줄 수 있어?" },
+      { en: "on the tip of my tongue", ko: "기억이 날 듯 말 듯 입안에서만 맴도는", ex: "His first name is right on the tip of my tongue, but I can't say it.", koEx: "그의 이름이 입안에서 맴돌고 기억이 날 듯 말 듯 한데 말이 안 튀어나오네." },
+      { en: "down to the wire", ko: "마지막 승부의 순간까지 치열한", ex: "The regional election race went right down to the wire.", koEx: "지역 선거 경쟁은 마지막 마감 순간까지 대단히 치열하게 이어졌습니다." },
+      { en: "step up to the plate", ko: "책임감을 갖고 적극적으로 나서다", ex: "When the team lead resigned, Maria stepped up to the plate.", koEx: "팀장이 사임하자 마리아가 책임감을 갖고 적극적으로 총대를 메고 나섰습니다." },
+      { en: "rain or shine", ko: "비가 오나 눈이 오나, 무슨 일이 있어도", ex: "Our outdoor farmers market takes place every Sunday, rain or shine.", koEx: "저희 야외 직거래 장터는 비가 오나 눈이 오나 매주 일요일마다 열립니다." },
+      { en: "in the blink of an eye", ko: "눈 깜짝할 사이에, 순식간에", ex: "Children grow up and head off to college in the blink of an eye.", koEx: "아이들은 정말 눈 깜짝할 사이에 훌쩍 자라서 대학에 들어갑니다." },
+      { en: "sick and tired of", ko: "~에 진절머리가 난, 지긋지긋한", ex: "I am thoroughly sick and tired of endless spam phone calls.", koEx: "끝도 없이 걸려 오는 스팸 전화에 이제 정말 진절머리가 납니다." },
+      { en: "off the record", ko: "대외비의, 비공식을 전제로 한", ex: "Strictly off the record, our company is planning an acquisition.", koEx: "완전한 대외비를 전제로 말씀드리자면, 저희 회사는 인수를 계획하고 있습니다." },
+      { en: "by leaps and bounds", ko: "눈부시게 급속도로, 일취월장하여", ex: "Her conversational English improved by leaps and bounds abroad.", koEx: "해외에 머무는 동안 그녀의 영어 회화 실력은 눈부시게 일취월장했습니다." },
+      { en: "draw the line", ko: "단호하게 선을 긋다, 한계를 정하다", ex: "You have to draw the line between healthy work and toxic burnout.", koEx: "건강한 업무 몰입과 유해한 번아웃 사이에는 반드시 단호한 선을 그어야 합니다." },
+      { en: "in the heat of the moment", ko: "격앙된 흥분 속에서, 홧김에", ex: "He apologized for raising his voice in the heat of the moment.", koEx: "그는 감정이 격앙된 순간에 언성을 높였던 것에 대해 진심으로 사과했습니다." },
+      { en: "under the radar", ko: "눈에 띄지 않게 조용히, 비밀리에", ex: "The stealth startup operated under the radar for nearly two years.", koEx: "그 스텔스 스타트업은 2년 가까이 외부에 눈에 띄지 않게 조용히 운영되었습니다." },
+      { en: "at all costs", ko: "어떤 대가를 치르더라도, 기필코", ex: "We must avoid client data breaches at all costs.", koEx: "우리는 어떠한 대가를 치르더라도 고객 데이터 유출만은 기필코 막아야 합니다." },
+      { en: "as far as I'm concerned", ko: "내 소견으로는, 내가 알기로는", ex: "As far as I'm concerned, this is the most balanced proposal yet.", koEx: "제 소견으로는 이번 제안서가 지금까지 나온 것 중 가장 균형 잡혀 있습니다." },
+      { en: "safe and sound", ko: "다친 데 없이 무사히", ex: "We landed at JFK airport safe and sound despite turbulent weather.", koEx: "난기류 날씨에도 불구하고 우리는 다친 데 없이 무사히 뉴욕 공항에 착륙했습니다." },
+      { en: "out of hand", ko: "통제 불능 상태로 치닫는", ex: "The office debate quickly got out of hand before the manager intervened.", koEx: "사무실 논쟁은 매니저가 중재에 나서기 전 순식간에 통제 불능으로 번졌습니다." },
+      { en: "back and forth", ko: "왔다 갔다 하며, 이리저리", ex: "We emailed back and forth all day to finalize the meeting time.", koEx: "우리는 미팅 시간을 확정 짓기 위해 하루 종일 이메일을 이리저리 주고받았습니다." },
+      { en: "behind the scenes", ko: "보이지 않는 무대 뒤에서, 막후에서", ex: "Countless stagehands worked behind the scenes to make the show magic.", koEx: "그 멋진 공연을 완성하기 위해 수많은 스태프들이 보이지 않는 무대 뒤에서 땀 흘렸습니다." },
+      { en: "spill over", ko: "다른 영역으로 번지다, 파급되다", ex: "Stress from the workplace often spills over into home life.", koEx: "직장에서 받는 스트레스는 가정생활로까지 쉽게 번져 파급되곤 합니다." },
+      { en: "by all means", ko: "아무렴, 기꺼이, 얼마든지", ex: "If you need an extra set of hands, by all means ask me.", koEx: "추가로 일손이 필요하다면 아무렴 얼마든지 나한테 요청해." },
+      { en: "in the long run", ko: "장기적인 관점에서 보면", ex: "Investing in education always pays off in the long run.", koEx: "교육에 투자하는 것은 장기적인 관점에서 보면 언제나 큰 결실을 맺습니다." },
+      { en: "off the top of my head", ko: "지금 당장 기억나는 바로는", ex: "Off the top of my head, I think our flight departs around 8 AM.", koEx: "지금 당장 생각나는 바로는 우리 비행기가 아침 8시경 출발할 거야." },
+      { en: "speaking of which", ko: "말이 나와서 말인데", ex: "Speaking of which, did you get a chance to read that email?", koEx: "말이 나와서 말인데, 혹시 그 이메일 읽어볼 짬이 좀 났어?" },
+      { en: "for the time being", ko: "당분간은, 우선은", ex: "Let's stick to our current software stack for the time being.", koEx: "당분간은 우리가 지금 쓰고 있는 소프트웨어 스택을 그대로 유지합시다." },
+      { en: "out of the question", ko: "절대 불가능한, 고려의 여지가 없는", ex: "Skipping the final security review is completely out of the question.", koEx: "최종 보안 검토를 건너뛰는 것은 절대로 불가능하며 고려조차 할 수 없습니다." },
+      { en: "easier said than done", ko: "말이야 쉽지 실행하기는 어렵다", ex: "Waking up at 5 AM every morning is definitely easier said than done.", koEx: "매일 아침 5시에 기상한다는 것은 말이야 쉽지 실제로 하기는 정말 어렵습니다." }
+    ];
+
+    // =========================================================================
+    // 4. 숙어 (Prepositional & Functional Idioms / Set Phrases) 마스터 풀
+    // =========================================================================
+    const CATEGORY_SET_PHRASES = [
+      { en: "in terms of", ko: "~의 관점에서, ~에 관하여", ex: "In terms of user experience, this new navigation is a huge upgrade.", koEx: "사용자 경험의 관점에서 보면, 이번 새로운 내비게이션은 엄청난 업그레이드입니다." },
+      { en: "on the verge of", ko: "~의 직전에 있는, 아슬아슬한", ex: "The medical researchers are on the verge of a major breakthrough.", koEx: "의학 연구진들은 기념비적인 중대한 돌파구를 마련하기 직전에 와 있습니다." },
+      { en: "with regard to", ko: "~에 관하여, ~에 대한", ex: "I am writing to inquire with regard to the open design position.", koEx: "현재 공석인 디자인 채용 포지션과 관련하여 문의드리고자 메일 드립니다." },
+      { en: "in accordance with", ko: "~에 부합하여, ~에 따라", ex: "All operations are conducted in accordance with environmental regulations.", koEx: "모든 공정 운영은 엄격한 환경 규정에 부합하여 투명하게 진행됩니다." },
+      { en: "by virtue of", ko: "~의 힘으로, ~의 덕분에", ex: "She won the scholarship by virtue of her outstanding academic record.", koEx: "그녀는 탁월한 학업 성적 덕분에 당당히 장학금을 따냈습니다." },
+      { en: "at stake", ko: "위태로운, 승패가 걸려 있는", ex: "There is too much reputation at stake to take silly shortcuts.", koEx: "단순한 편법을 쓰기에는 우리 회사의 평판이 너무나 크게 위태로워집니다." },
+      { en: "in light of", ko: "~에 비추어 볼 때, ~을 고려하여", ex: "In light of recent sales trends, we adjusted our quarterly revenue targets.", koEx: "최근 판매 추이에 비추어 볼 때, 우리는 분기별 매출 목표치를 신중히 조정했습니다." },
+      { en: "for the sake of", ko: "~을 위하여, ~의 유익을 위해", ex: "Let's put aside our personal differences for the sake of the project.", koEx: "프로젝트의 성공을 위하여 우리 각자의 사소한 견해 차이는 잠시 접어둡시다." },
+      { en: "in spite of", ko: "~에도 불구하고", ex: "In spite of harsh blizzards, the delivery couriers arrived on schedule.", koEx: "혹독한 눈보라에도 불구하고 배송 기사님들은 정확히 정시에 도착했습니다." },
+      { en: "play a role in", ko: "~에서 중요한 역할을 하다", ex: "Consistent daily habits play a vital role in long-term mental health.", koEx: "꾸준한 일상 습관은 장기적인 정신 건강을 유지하는 데 결정적인 역할을 합니다." },
+      { en: "come to terms with", ko: "불가피한 현실을 받아들이다", ex: "It took time for the team to come to terms with the funding cut.", koEx: "투자금 삭감이라는 가혹한 현실을 담담히 받아들이기까지 팀원들에게는 시간이 필요했습니다." },
+      { en: "in charge of", ko: "~을 총괄하여 맡고 있는", ex: "Who is currently in charge of international customer relations?", koEx: "현재 해외 고객 관리 업무를 총괄하여 맡고 있는 책임자가 누구인가요?" },
+      { en: "on behalf of", ko: "~을 대표하여, 대신하여", ex: "On behalf of our entire engineering squad, thank you for your support.", koEx: "저희 엔지니어링 스쿼드 전체를 대표하여 여러분의 성원에 깊은 감사를 드립니다." },
+      { en: "take into account", ko: "상황이나 요소를 참작하다, 감안하다", ex: "We must take into account local cultural nuances when expanding.", koEx: "해외로 확장할 때는 현지의 문화적 미묘한 차이들을 반드시 감안해야 합니다." },
+      { en: "make up one's mind", ko: "확고히 결심을 굳히다", ex: "Take your time, but try to make up your mind by Friday noon.", koEx: "충분히 고민해 보시되, 금요일 정오까지는 확고히 마음의 결정을 내려주세요." },
+      { en: "take advantage of", ko: "좋은 기회를 활용하다", ex: "You should take advantage of this free mentorship workshop.", koEx: "이번 무료 멘토링 워크숍 기회를 적극적으로 활용해 보는 것이 좋습니다." },
+      { en: "keep track of", ko: "지속적으로 기록하고 파악하다", ex: "A simple budgeting app helps me keep track of daily coffee expenses.", koEx: "단순한 가계부 앱 덕분에 매일 나가는 커피 지출을 꼼꼼하게 파악할 수 있어." },
+      { en: "bear in mind", ko: "명심하다, 유념해 두다", ex: "Please bear in mind that airport customs lines can be extremely long.", koEx: "공항 입국 심사 대기 줄이 극도로 길어질 수 있다는 점을 꼭 유념해 두세요." },
+      { en: "in contrast to", ko: "~와 대조적으로, 반대로", ex: "In contrast to last year, our client renewals have surged by forty percent.", koEx: "작년과 대조적으로 올해 고객 재계약률은 무려 40퍼센트나 급증했습니다." },
+      { en: "regardless of", ko: "~에 상관없이, 구애받지 않고", ex: "Everyone deserves fair treatment regardless of their background.", koEx: "출신 배경에 상관없이 모든 사람은 공정하고 평등한 대우를 받을 자격이 있습니다." },
+      { en: "pave the way for", ko: "~을 위한 길을 열다, 초석을 놓다", ex: "Early renewable energy breakthroughs paved the way for modern solar tech.", koEx: "초기 신재생 에너지 혁신은 현대 태양광 기술의 눈부신 발전을 위한 탄탄한 초석을 놓았습니다." },
+      { en: "at the expense of", ko: "~을 희생시키면서, 대가로", ex: "Never chase fast business growth at the expense of team well-being.", koEx: "팀원들의 건강과 복지를 희생시키면서까지 무리한 고속 성장을 쫓지 마세요." }
+    ];
+
+    // =========================================================================
+    // 4개 카테고리(구동사, 관용구, 필수 관용표현, 숙어) 통합 3,000 데이터베이스 빌더
+    // =========================================================================
     function build3000AmericanWordPool() {
       const pool = [];
       const keys = new Set();
       const targetCount = 3000;
 
-      function addUnique(eng, kor, example, exKo) {
+      function addUnique(eng, kor, example, exKo, category) {
         if (pool.length >= targetCount) return false;
         const cleanEng = eng.trim();
         const k = cleanEng.toLowerCase();
@@ -673,35 +718,32 @@
             english: cleanEng,
             korean: kor.trim(),
             example: example.trim(),
-            exampleKo: exKo.trim()
+            exampleKo: exKo.trim(),
+            category: category || "실전 표현"
           });
           return true;
         }
         return false;
       }
 
-      // 1. 핵심 구동사 풀 (50개) 등록
-      CORE_AMERICAN_PHRASAL_VERBS.forEach(item => {
-        addUnique(item.en, item.ko, item.ex, item.koEx);
+      // 1단계: 4대 핵심 카테고리 원본 고유 등록
+      CATEGORY_PHRASAL_VERBS.forEach(item => {
+        addUnique(item.en, item.ko, item.ex, item.koEx, "구동사");
       });
 
-      // 2. 확장 구동사 풀 (50개) 등록
-      EXTENDED_AMERICAN_PHRASAL_VERBS.forEach(item => {
-        addUnique(item.en, item.ko, item.ex, item.koEx);
+      CATEGORY_IDIOMS.forEach(item => {
+        addUnique(item.en, item.ko, item.ex, item.koEx, "관용구/이디엄");
       });
 
-      // 3. 일상 최빈출 관용구 풀 (40개 + 20개) 등록
-      AMERICAN_TOP_COLLOQUIAL_IDIOMS.forEach(item => {
-        addUnique(item.en, item.ko, item.ex, item.koEx);
-      });
-      EXTENDED_AMERICAN_IDIOMS.forEach(item => {
-        addUnique(item.en, item.ko, item.ex, item.koEx);
+      CATEGORY_COLLOQUIAL_PHRASES.forEach(item => {
+        addUnique(item.en, item.ko, item.ex, item.koEx, "필수 관용표현");
       });
 
-      // 통합 핵심 구동사 마스터 리스트 (총 100개)
-      const ALL_CORE_PVS = [...CORE_AMERICAN_PHRASAL_VERBS, ...EXTENDED_AMERICAN_PHRASAL_VERBS];
+      CATEGORY_SET_PHRASES.forEach(item => {
+        addUnique(item.en, item.ko, item.ex, item.koEx, "숙어");
+      });
 
-      // 미국 현지 실생활 대화 패턴 및 핵심 연어 (30개 카테고리)
+      // 2단계: 실전 대화 회화 연어 조합틀 (구동사 및 관용표현의 실제 회화 쓰임새)
       const CONTEXT_COLLOCATIONS = [
         { verb: "manage to", koV: "어떻게든 용케 ~해내다" },
         { verb: "try to", koV: "~하려고 노력하다" },
@@ -711,14 +753,11 @@
         { verb: "fail to", koV: "~하지 못하다" },
         { verb: "hesitate to", koV: "~하기를 주저하다" },
         { verb: "decide to", koV: "~하기로 결심하다" },
-        { verb: "refuse to", koV: "~하기를 거부하다" },
         { verb: "strive to", koV: "~하려고 부단히 애쓰다" },
         { verb: "struggle to", koV: "~하느라 진땀을 빼다" },
         { verb: "happen to", koV: "우연히 ~하게 되다" },
-        { verb: "learn to", koV: "~하는 법을 배우다" },
         { verb: "remember to", koV: "잊지 않고 꼭 ~하다" },
         { verb: "forget to", koV: "~할 것을 깜빡 잊다" },
-        { verb: "prefer to", koV: "차라리 ~하는 편을 선호하다" },
         { verb: "aim to", koV: "~하는 것을 목표로 삼다" },
         { verb: "continue to", koV: "계속해서 ~하다" },
         { verb: "prepare to", koV: "~할 만반의 준비를 하다" },
@@ -728,74 +767,79 @@
         { verb: "be willing to", koV: "기꺼이 흔쾌히 ~하다" },
         { verb: "be bound to", koV: "틀림없이 반드시 ~하게 되다" },
         { verb: "be likely to", koV: "십중팔구 ~할 가능성이 높다" },
-        { verb: "be reluctant to", koV: "~하기를 꺼려하다" },
-        { verb: "be determined to", koV: "단단히 마음먹고 ~하다" },
         { verb: "take time to", koV: "시간을 들여 신중히 ~하다" },
-        { verb: "help me", koV: "내가 ~하는 것을 돕다" },
-        { verb: "encourage us to", koV: "우리가 ~하도록 격려하다" }
+        { verb: "be reluctant to", koV: "~하기를 꺼려하다" }
       ];
 
-      // 미국 현지 실생활 회화 문맥 프레임
+      // 미국 현지 실생활 대화 상황 프레임
       const CONVERSATION_FRAMES = [
-        { lead: "Make sure you", leadKo: "잊지 말고 꼭", trail: "before leaving today", trailKo: "오늘 퇴근하기 전에" },
-        { lead: "We really should", leadKo: "우리 정말", trail: "as soon as possible", trailKo: "가능한 한 빨리" },
-        { lead: "I've been trying to", leadKo: "안 그래도 계속", trail: "all morning", trailKo: "오전 내내" },
-        { lead: "It's always wise to", leadKo: "언제나", trail: "in this kind of situation", trailKo: "이런 상황에서는 현명한 처사입니다" },
-        { lead: "Don't forget to", leadKo: "깜빡 잊지 말고", trail: "whenever you get a chance", trailKo: "시간 날 때마다 꼭" },
-        { lead: "How did you", leadKo: "너 어떻게", trail: "so smoothly and quickly?", trailKo: "그렇게 능숙하고 빠르게 했어?" },
-        { lead: "You definitely want to", leadKo: "너 꼭", trail: "for better results", trailKo: "더 나은 결과를 위해" },
-        { lead: "Everyone is encouraged to", leadKo: "모든 구성원들이", trail: "during team meetings", trailKo: "팀 미팅 시간 중에 적극적으로" },
-        { lead: "It took me a while to", leadKo: "내가", trail: "without feeling nervous", trailKo: "긴장하지 않고 익숙해지기까지 시간이 좀 걸렸어" },
-        { lead: "We are counting on you to", leadKo: "우리는 당신이", trail: "on this critical project", trailKo: "이번 중대한 프로젝트에서 잘 해낼 것이라 믿습니다" },
-        { lead: "It is essential to", leadKo: "반드시", trail: "for the upcoming launch", trailKo: "다가오는 출시를 위해 꼭 필요합니다" },
-        { lead: "She advised me to", leadKo: "그녀는 나에게", trail: "before signing the contract", trailKo: "계약서에 서명하기 전에 당부했습니다" },
-        { lead: "You will regret it if you don't", leadKo: "만약", trail: "while you still have time", trailKo: "시간이 아직 있을 때 하지 않으면 후회할 거야" },
-        { lead: "Our manager asked us to", leadKo: "팀장님께서 우리에게", trail: "by the end of this week", trailKo: "이번 주말까지 해달라고 요청하셨습니다" },
-        { lead: "I find it helpful to", leadKo: "나는", trail: "every single morning", trailKo: "매일 아침마다 하는 것이 큰 도움이 된다고 생각해요" }
+        { lead: "Make sure you", leadKo: "오늘 나가기 전에 잊지 말고 꼭", trail: "before leaving today", trailKo: "챙겨보세요" },
+        { lead: "We really should", leadKo: "우리 정말 가능한 한 빨리", trail: "as soon as possible", trailKo: "추진해야 합니다" },
+        { lead: "I've been trying to", leadKo: "안 그래도 오늘 오전 내내", trail: "all morning", trailKo: "계속 노력 중이었어" },
+        { lead: "It's always wise to", leadKo: "이런 상황에서는 언제나 신중하게", trail: "in this kind of situation", trailKo: "행동하는 것이 현명합니다" },
+        { lead: "Don't forget to", leadKo: "틈틈이 시간 날 때마다 깜빡 잊지 말고", trail: "whenever you get a chance", trailKo: "확인해 두세요" },
+        { lead: "How did you", leadKo: "너 어떻게 그렇게 능숙하고 빠르게", trail: "so smoothly and quickly?", trailKo: "해결한 거야?" },
+        { lead: "You definitely want to", leadKo: "더 나은 결과를 위해 당신은 꼭", trail: "for better results", trailKo: "신경 쓰는 것이 좋습니다" },
+        { lead: "Everyone is encouraged to", leadKo: "팀 미팅 시간 중에는 구성원 모두가", trail: "during team meetings", trailKo: "자유롭게 의견을 내도록 권장됩니다" },
+        { lead: "It took me a while to", leadKo: "긴장하지 않고 자연스럽게 익숙해지기까지", trail: "without feeling nervous", trailKo: "시간이 꽤 걸렸습니다" },
+        { lead: "We are counting on you to", leadKo: "이번 중대한 프로젝트에서 당신이 잘", trail: "on this critical project", trailKo: "해낼 것이라 팀원 모두가 믿고 있습니다" },
+        { lead: "It is essential to", leadKo: "다가오는 공식 출시를 위해 반드시", trail: "for the upcoming launch", trailKo: "사전에 매끄럽게 정리해야 합니다" },
+        { lead: "She advised me to", leadKo: "그녀는 계약서에 서명하기 전에 차분히", trail: "before signing the contract", trailKo: "검토하라고 당부했습니다" },
+        { lead: "Our manager asked us to", leadKo: "팀장님께서는 이번 주말까지", trail: "by the end of this week", trailKo: "완료해 줄 것을 요청하셨습니다" },
+        { lead: "I find it helpful to", leadKo: "매일 아침마다 이렇게 실천하는 것이", trail: "every single morning", trailKo: "집중력을 유지하는 데 큰 도움이 됩니다" }
       ];
 
-      // 4. 구동사 100개 × 실생활 연어 30개 = 3,000개 순수 실전 회화 표현 생성
+      // 4대 카테고리 순회 배열
+      const CATEGORY_SETS = [
+        { list: CATEGORY_PHRASAL_VERBS, name: "구동사" },
+        { list: CATEGORY_IDIOMS, name: "관용구/이디엄" },
+        { list: CATEGORY_COLLOQUIAL_PHRASES, name: "필수 관용표현" },
+        { list: CATEGORY_SET_PHRASES, name: "숙어" }
+      ];
+
       let fIdx = 0;
-      for (let i = 0; i < ALL_CORE_PVS.length; i++) {
-        for (let j = 0; j < CONTEXT_COLLOCATIONS.length; j++) {
+      // 4개 카테고리 균형 생성 루프
+      for (const cat of CATEGORY_SETS) {
+        for (let i = 0; i < cat.list.length; i++) {
+          for (let j = 0; j < CONTEXT_COLLOCATIONS.length; j++) {
+            if (pool.length >= targetCount) break;
+            const element = cat.list[i];
+            const colloc = CONTEXT_COLLOCATIONS[j];
+            const frame = CONVERSATION_FRAMES[fIdx % CONVERSATION_FRAMES.length];
+
+            const naturalPhrase = `${colloc.verb} ${element.en}`;
+            const phraseMeaning = `${element.ko} (${colloc.koV})`;
+            const fullEx = `${frame.lead} ${naturalPhrase} ${frame.trail}.`;
+            const fullExKo = `${frame.leadKo} ${element.ko}할 수 있도록 ${colloc.koV} ${frame.trailKo}.`;
+
+            addUnique(naturalPhrase, phraseMeaning, fullEx, fullExKo, cat.name);
+            fIdx++;
+          }
           if (pool.length >= targetCount) break;
-          const pv = ALL_CORE_PVS[i];
-          const colloc = CONTEXT_COLLOCATIONS[j];
-          const frame = CONVERSATION_FRAMES[fIdx % CONVERSATION_FRAMES.length];
-
-          const naturalPhrase = `${colloc.verb} ${pv.en}`;
-          const phraseMeaning = `${pv.ko} (${colloc.koV})`;
-          const fullEx = `${frame.lead} ${naturalPhrase} ${frame.trail}.`;
-          const fullExKo = `${frame.leadKo} ${pv.ko}할 수 있도록 ${colloc.koV} ${frame.trailKo}.`;
-
-          addUnique(naturalPhrase, phraseMeaning, fullEx, fullExKo);
-          fIdx++;
         }
         if (pool.length >= targetCount) break;
       }
 
-      // 5. 관용구 및 일상 표현 기반 보충 결합 (3,000개 도달 시까지)
-      const ALL_IDIOMS = [...AMERICAN_TOP_COLLOQUIAL_IDIOMS, ...EXTENDED_AMERICAN_IDIOMS];
-      for (let i = 0; i < ALL_IDIOMS.length && pool.length < targetCount; i++) {
-        for (let j = 0; j < CONTEXT_COLLOCATIONS.length && pool.length < targetCount; j++) {
-          const idm = ALL_IDIOMS[i];
-          const colloc = CONTEXT_COLLOCATIONS[j];
-          const frame = CONVERSATION_FRAMES[fIdx % CONVERSATION_FRAMES.length];
+      // 목표 3,000개 충족 시까지 순환 보충
+      while (pool.length < targetCount) {
+        const cat = CATEGORY_SETS[fIdx % CATEGORY_SETS.length];
+        const element = cat.list[(fIdx * 3) % cat.list.length];
+        const colloc = CONTEXT_COLLOCATIONS[(fIdx * 7) % CONTEXT_COLLOCATIONS.length];
+        const frame = CONVERSATION_FRAMES[fIdx % CONVERSATION_FRAMES.length];
 
-          const naturalPhrase = `${colloc.verb} ${idm.en}`;
-          const phraseMeaning = `${idm.ko} (${colloc.koV})`;
-          const fullEx = `${frame.lead} ${naturalPhrase} ${frame.trail}.`;
-          const fullExKo = `${frame.leadKo} ${idm.ko}할 수 있도록 ${colloc.koV} ${frame.trailKo}.`;
+        const naturalPhrase = `${colloc.verb} ${element.en}`;
+        const phraseMeaning = `${element.ko} (${colloc.koV})`;
+        const fullEx = `${frame.lead} ${naturalPhrase} ${frame.trail}.`;
+        const fullExKo = `${frame.leadKo} ${element.ko}할 수 있도록 ${colloc.koV} ${frame.trailKo}.`;
 
-          addUnique(naturalPhrase, phraseMeaning, fullEx, fullExKo);
-          fIdx++;
-        }
+        addUnique(naturalPhrase, phraseMeaning, fullEx, fullExKo, cat.name);
+        fIdx++;
       }
 
       return pool.slice(0, targetCount);
     }
 
-    // 미국인 최빈출 3,000 어휘 & 구동사 풀 탑재
+    // 미국인 최빈출 구동사·관용구·필수표현·숙어 3,000 풀 가동
     allDictionaryWords = build3000AmericanWordPool();
 
     // 혹시라도 남아있을 수 있는 (v...) 표식 안전 정제 헬퍼
@@ -944,6 +988,16 @@
       return parsedWords;
     }
 
+    // 어색하거나 불완전한 번역 텍스트 감지 헬퍼
+    function isSuspiciousTranslation(text) {
+      if (!text || text === '-' || text.trim() === '') return true;
+      const t = text.trim();
+      if (t.includes('번역 중') || t.includes('준비하고 있습니다') || t.includes('가져오는 중입니다')) return true;
+      if (t.includes('을(를)') || t.includes('이(가)') || t.includes('실전 회화 활용입니다') || t.includes('~') || t.includes('(v')) return true;
+      if (/^\(.*?\)$/.test(t)) return true;
+      return false;
+    }
+
     // 영문 문장 실시간 한국어 번역
     async function translateSentence(sentence) {
       if (!sentence || sentence === '-' || sentence === "등록된 예문이 없습니다.") return "";
@@ -999,63 +1053,193 @@
     };
 
     const DISTINCT_COMPANION_EXAMPLES = {
-      "meticulous": { en: "She did a meticulous job checking every single line of code.", ko: "그녀는 코드의 모든 한 줄 한 줄을 꼼꼼하게 확인했습니다." },
-      "resilience": { en: "Mental resilience is essential when starting your own business.", ko: "창업을 할 때는 강한 멘탈 회복력이 필수적입니다." },
-      "ubiquitous": { en: "Coffee shops are virtually ubiquitous on every street corner.", ko: "카페는 모든 길모퉁이마다 어디에나 있습니다." },
-      "ephemeral": { en: "Social media trends can be ephemeral, disappearing in a week.", ko: "소셜 미디어 트렌드는 일시적이어서 일주일 만에 사라지기도 합니다." },
-      "lucid": { en: "His instructions were so lucid that anyone could follow them.", ko: "그의 지침은 너무나 명쾌해서 누구나 따라 할 수 있었습니다." },
-      "pragmatic": { en: "Let's take a pragmatic approach and focus on what works now.", ko: "지금 당장 효과가 있는 것에 집중하는 실용적인 접근 방식을 취합시다." },
-      "scrutinize": { en: "The bank will scrutinize your financial records thoroughly.", ko: "은행에서 당신의 금융 기록을 철저하게 조사할 것입니다." },
-      "vulnerable": { en: "Children are often the most vulnerable during harsh winters.", ko: "혹독한 겨울철에는 아이들이 가장 취약해지기 쉽습니다." },
-      "perspective": { en: "Traveling abroad gives you a completely different perspective on life.", ko: "해외여행은 삶에 대한 완전히 다른 시각을 선사합니다." },
-      "collaborate": { en: "Teams from marketing and design collaborate closely on new features.", ko: "마케팅과 디자인 팀은 새로운 기능 개발을 위해 긴밀하게 협업합니다." },
-      "comprehensive": { en: "The report provides a comprehensive overview of the quarterly results.", ko: "그 보고서는 분기별 실적에 대한 포괄적인 개요를 제공합니다." },
-      "crucial": { en: "Effective communication is crucial for running remote teams smoothly.", ko: "효과적인 소통은 원격 팀을 원활하게 운영하는 데 결정적입니다." },
-      "deteriorate": { en: "Without immediate maintenance, road conditions will deteriorate fast.", ko: "즉각적인 보수 작업이 없으면 도로 상태는 빠르게 악화될 것입니다." },
-      "diminish": { en: "The company's influence in the market began to diminish gradually.", ko: "시장에서 그 회사의 영향력은 서서히 줄어들기 시작했습니다." },
-      "diverse": { en: "Our company prides itself on having a diverse and inclusive workforce.", ko: "저희 회사는 다양하고 포용적인 인력을 보유하고 있는 것을 자랑스럽게 생각합니다." },
-      "efficient": { en: "Using keyboard shortcuts makes your daily workflow much more efficient.", ko: "단축키를 활용하면 일상 업무 흐름이 훨씬 더 효율적으로 바뀝니다." },
-      "enhance": { en: "Regular aerobic exercise will enhance both your stamina and mood.", ko: "규칙적인 유산소 운동은 체력과 기분을 모두 향상시켜 줍니다." },
-      "feasible": { en: "The engineering team concluded that the proposal is technically feasible.", ko: "엔지니어링 팀은 그 제안이 기술적으로 실현 가능하다고 결론지었습니다." },
-      "fluctuate": { en: "Currency exchange rates can fluctuate widely based on global news.", ko: "환율은 글로벌 뉴스에 따라 대단히 큰 폭으로 요동칠 수 있습니다." },
-      "inevitable": { en: "Change is inevitable when transitioning to a modern cloud system.", ko: "현대적인 클라우드 시스템으로 전환할 때 변화는 불가피합니다." },
-      "innovative": { en: "Her startup developed an innovative way to recycle ocean plastic.", ko: "그녀의 스타트업은 해양 플라스틱을 재활용하는 혁신적인 방법을 개발했습니다." },
-      "intricate": { en: "The watch mechanism is composed of hundreds of intricate tiny gears.", ko: "그 시계 메커니즘은 수백 개의 복잡하고 정교한 미세 톱니바퀴들로 구성되어 있습니다." },
-      "prevalent": { en: "Remote working has become prevalent across tech companies worldwide.", ko: "재택근무는 전 세계 테크 기업들 사이에서 매우 일반적이고 널리 퍼진 방식이 되었습니다." },
-      "reluctant": { en: "Many consumers are reluctant to share personal details online.", ko: "많은 소비자들이 온라인에서 개인 정보를 공유하기를 꺼려합니다." },
-      "simultaneous": { en: "The launch event featured simultaneous live translation in five languages.", ko: "그 출시 행사에서는 5개 언어로 된 동시통역이 함께 제공되었습니다." },
-      "substantial": { en: "The new automation software resulted in a substantial saving of time.", ko: "새로운 자동화 소프트웨어 덕분에 상당한 양의 시간을 절약할 수 있었습니다." },
-      "transparent": { en: "Management promised to be fully transparent about future compensation.", ko: "경영진은 향후 보상 체계에 대해 완벽하게 투명할 것을 약속했습니다." },
-      "unprecedented": { en: "The rapid adoption of AI technology is truly unprecedented.", ko: "인공지능 기술의 급격한 도입 속도는 참으로 전례가 없는 수준입니다." },
-      "versatile": { en: "This kitchen gadget is versatile enough to chop, blend, and whisk.", ko: "이 주방 도구는 다지고 섞고 거품을 낼 수 있을 정도로 매우 다재다능합니다." },
-      "advocate": { en: "Doctors strongly advocate getting at least seven hours of restful sleep.", ko: "의사들은 최소 일곱 시간의 편안한 수면을 취할 것을 강력히 권고합니다." },
-      "allocate": { en: "The city council voted to allocate more funds to public parks.", ko: "시의회는 공공 공원에 더 많은 예산을 배정하기로 결의했습니다." },
-      "anticipate": { en: "Economists anticipate a steady recovery over the coming quarters.", ko: "경제학자들은 다가오는 분기들에 걸쳐 꾸준한 회복세를 예상하고 있습니다." },
-      "coherent": { en: "He formulated a clear and coherent strategy for expanding overseas.", ko: "그는 해외 진출을 위한 명확하고 일관성 있는 전략을 수립했습니다." },
-      "compensate": { en: "The airline offered travel vouchers to compensate for the delayed flight.", ko: "항공사는 비행기 지연을 보상하기 위해 여행 상품권을 제공했습니다." },
-      "consecutive": { en: "The basketball team celebrated five consecutive championship wins.", ko: "그 농구팀은 5연속 챔피언십 우승을 자축했습니다." },
-      "contemplate": { en: "She took a sabbatical to contemplate her future life choices.", ko: "그녀는 향후 인생의 선택들을 깊이 고심하기 위해 안식년을 가졌습니다." },
-      "dedicate": { en: "Volunteers dedicate their Saturday mornings to cleaning local rivers.", ko: "자원봉사자들은 토요일 아침을 지역 하천 정화에 기꺼이 바칩니다." },
-      "deliberate": { en: "Choosing the right words requires deliberate thought and patience.", ko: "적절한 단어를 고르는 데는 신중한 생각과 인내심이 필요합니다." },
-      "diligent": { en: "Diligent preparation allowed the student to ace the entrance exam.", ko: "성실하고 부지런한 준비 덕분에 그 학생은 입학시험을 훌륭히 치를 수 있었습니다." },
-      "disrupt": { en: "Sudden power outages can seriously disrupt factory production lines.", ko: "갑작스러운 정전은 공장 생산 라인을 심각하게 중단시킬 수 있습니다." },
-      "evaluate": { en: "The hiring manager will evaluate each candidate's problem-solving skills.", ko: "채용 매니저는 각 후보자의 문제 해결 역량을 면밀히 평가할 것입니다." },
-      "facilitate": { en: "Online tools facilitate seamless collaboration among distributed teams.", ko: "온라인 도구들은 분산된 팀들 간의 원활하고 매끄러운 협업을 촉진합니다." },
-      "foster": { en: "Great leaders actively foster a culture of creativity and trust.", ko: "훌륭한 리더들은 창의성과 신뢰의 문화를 적극적으로 조성하고 육성합니다." },
-      "implement": { en: "Our team will implement the new security guidelines next week.", ko: "저희 팀은 다음 주에 새로운 보안 가이드라인을 본격 적용할 예정입니다." },
-      "mandatory": { en: "Wearing protective safety goggles is mandatory in the chemistry lab.", ko: "화학 실험실에서는 안전보호용 보안경 착용이 의무 사항입니다." },
-      "mitigate": { en: "Diversifying investments is one of the best ways to mitigate financial risk.", ko: "분산 투자는 금융 위험을 완화하고 줄일 수 있는 최선의 방법 중 하나입니다." },
-      "negotiate": { en: "The supplier was willing to negotiate a discount for bulk orders.", ko: "공급업체는 대량 주문에 대해 기꺼이 할인을 협상할 의향이 있었습니다." },
-      "nuance": { en: "Translators need to capture every subtle cultural nuance accurately.", ko: "번역가들은 모든 미묘한 문화적 뉘앙스를 정확하게 포착해야 합니다." },
-      "paramount": { en: "Customer privacy and security are of paramount importance to us.", ko: "고객의 개인정보 보호와 보안은 저희에게 무엇보다도 가장 중요한 가치입니다." },
-      "profound": { en: "The speaker's insightful words had a profound impact on the audience.", ko: "연사의 통찰력 넘치는 말은 청중들에게 깊은 울림과 영향을 주었습니다." },
-      "relentless": { en: "His relentless pursuit of perfection led to outstanding breakthroughs.", ko: "완벽을 향한 그의 끊임없는 집념은 탁월한 혁신적 돌파구로 이어졌습니다." },
-      "rigorous": { en: "Every aviation part undergoes rigorous testing before installation.", ko: "모든 항공기 부품은 설치되기 전 엄격하고 철저한 테스트를 거칩니다." },
-      "subtle": { en: "There was a subtle change in his tone that suggested disagreement.", ko: "그의 말투에는 반대를 암시하는 미묘한 변화가 있었습니다." },
-      "succinct": { en: "Keep your executive summary succinct and focused on key metrics.", ko: "경영진 요약 보고서는 간결하고 핵심 지표에 집중되도록 작성하세요." },
-      "tenacious": { en: "She is a tenacious investigator who never gives up on a cold case.", ko: "그녀는 미제 사건을 결코 포기하지 않는 끈기 있고 집요한 수사관입니다." },
-      "validate": { en: "We conducted extensive interviews to validate our market assumptions.", ko: "우리는 시장에 대한 가설을 검증하기 위해 광범위한 인터뷰를 진행했습니다." }
+      // 핵심 고빈도 어휘 & 수능/토익/GRE/일상 회화 필수 단어 개별 고유 예문
+      "meticulous": { en: "She did a meticulous job checking every single line of code before deployment.", ko: "그녀는 배포하기 전 코드의 모든 한 줄 한 줄을 믿을 수 없을 만큼 꼼꼼하게 점검했습니다." },
+      "resilience": { en: "Mental resilience is what keeps founders going when funding talks stall.", ko: "투자 유치가 난항을 겪을 때 창업가를 버티게 해주는 것은 결국 강인한 멘탈 회복력입니다." },
+      "ubiquitous": { en: "QR code menus became practically ubiquitous at restaurants after the pandemic.", ko: "팬데믹 이후 식당에서 QR 코드 메뉴판은 어디서나 흔히 볼 수 있는 존재가 되었습니다." },
+      "ephemeral": { en: "Viral TikTok trends are notoriously ephemeral, often fading within a couple of weeks.", ko: "바이럴 틱톡 트렌드는 불과 몇 주 만에 사그라들 만큼 일시적이고 덧없기로 유명합니다." },
+      "lucid": { en: "His quick whiteboard sketch gave us a lucid breakdown of the system architecture.", ko: "그가 화이트보드에 슥슥 그린 스케치는 시스템 구조에 대해 무척 명쾌한 이해를 주었습니다." },
+      "pragmatic": { en: "Rather than debating endlessly, let's take a pragmatic route and ship what works today.", ko: "끝없는 논쟁 대신, 실용적인 접근 방식을 취해 당장 작동하는 버전부터 출시합시다." },
+      "scrutinize": { en: "Investors will scrutinize your monthly churn rates before writing a check.", ko: "투자자들은 수표를 써주기 전에 귀사의 월간 고객 이탈률을 아주 현미경 보듯 면밀히 들여다볼 것입니다." },
+      "vulnerable": { en: "Unsecured Wi-Fi networks in public cafes leave personal passwords extremely vulnerable.", ko: "공공 카페의 보안 없는 와이파이 네트워크는 개인 비밀번호를 극도로 취약한 위험에 노출시킵니다." },
+      "perspective": { en: "Traveling solo through South America gave her a radically broader perspective on success.", ko: "남미를 혼자 배낭여행한 경험은 그녀에게 성공이란 무엇인가에 대한 완전히 새로운 시각을 심어주었습니다." },
+      "collaborate": { en: "Engineers and product designers collaborate daily over quick Slack huddles.", ko: "개발자와 제품 디자이너는 매일 슬랙 허들을 통해 즉각적으로 소통하며 긴밀히 협업합니다." },
+      "comprehensive": { en: "The documentation provides a comprehensive onboarding guide for every new software hire.", ko: "그 공식 문서는 모든 소프트웨어 신규 입사자를 위한 매우 상세하고 포괄적인 온보딩 가이드를 제공합니다." },
+      "crucial": { en: "Getting seven hours of deep sleep is crucial for keeping your cognitive focus sharp.", ko: "일곱 시간의 깊은 숙면을 취하는 것은 인지 집중력을 예리하게 유지하는 데 결정적으로 중요합니다." },
+      "deteriorate": { en: "Without regular maintenance, battery health can deteriorate much faster than expected.", ko: "정기적인 관리가 없으면 스마트 기기 배터리 수명은 예상보다 훨씬 빠르게 저하될 수 있습니다." },
+      "diminish": { en: "Working non-stop without weekend breaks will quickly diminish your creative output.", ko: "주말 휴식 없이 쉬지 않고 일만 하면 창의적인 작업 능률이 급속도로 떨어집니다." },
+      "diverse": { en: "Our podcast invites guests from diverse backgrounds, from urban farmers to indie hackers.", ko: "저희 팟캐스트는 도시 농부부터 인디 개발자까지 매우 다양한 배경을 가진 게스트들을 초대합니다." },
+      "efficient": { en: "Learning these browser shortcuts will make your daily workflow noticeably more efficient.", ko: "이 브라우저 단축키들을 익혀두면 일상적인 웹 서핑과 업무 속도가 눈에 띄게 효율적으로 바뀝니다." },
+      "enhance": { en: "Adding fresh lemon zest will enhance the natural aroma of this pasta dish.", ko: "신선한 레몬 제스트를 살짝 곁들이면 이 파스타 요리 본연의 풍미를 한층 더 끌어올려 줍니다." },
+      "feasible": { en: "Given our tight timeline, building a lightweight prototype is far more feasible.", ko: "촉박한 일정을 고려할 때, 핵심 기능만 담은 가벼운 프로토타입을 먼저 제작하는 것이 훨씬 실현 가능성 높습니다." },
+      "fluctuate": { en: "Airline ticket prices tend to fluctuate wildly depending on how early you book.", ko: "항공권 가격은 얼마나 일찍 예약하느냐에 따라 엄청난 폭으로 요동치는 경향이 있습니다." },
+      "inevitable": { en: "Bumping into unexpected merge conflicts is an inevitable part of software teamwork.", ko: "팀 단위로 소프트웨어를 개발할 때 코드 충돌과 맞닥뜨리는 것은 결코 피할 수 없는 통과의례입니다." },
+      "innovative": { en: "The startup came up with an innovative packaging material made entirely from mushroom mycelium.", ko: "그 스타트업은 버섯 균사체만을 활용하여 만든 혁신적인 친환경 포장재를 개발해 냈습니다." },
+      "intricate": { en: "The vintage pocket watch was packed with hundreds of intricate mechanical gears.", ko: "그 빈티지 회중시계 안에는 수백 개의 정교하고 복잡한 기계식 톱니바퀴들이 빽빽하게 맞물려 있었습니다." },
+      "prevalent": { en: "Burnout has become increasingly prevalent among professionals working remote night shifts.", ko: "야간 원격 근무를 하는 직장인들 사이에서 번아웃 증후군은 점점 더 흔하고 널리 퍼진 문제가 되었습니다." },
+      "reluctant": { en: "Most users are reluctant to download yet another standalone app just for one discount coupon.", ko: "대부분의 사용자들은 단 한 번의 할인 쿠폰 때문에 또 다른 별도 앱을 다운로드하기를 꺼려합니다." },
+      "simultaneous": { en: "The livestream featured simultaneous captions in Korean, English, and Spanish.", ko: "그 글로벌 라이브 스트리밍은 한국어, 영어, 스페인어 자막을 동시에 제공했습니다." },
+      "substantial": { en: "Switching to an electric vehicle brought a substantial reduction in our monthly gas expenses.", ko: "전기차로 교체한 이후 매달 나가던 기름값 지출이 상당한 수준으로 크게 줄어들었습니다." },
+      "transparent": { en: "Customers deeply appreciate brands that are completely transparent about ingredient sourcing.", ko: "소비자들은 원재료의 공급 출처를 숨김없이 투명하게 공개하는 브랜드에 깊은 신뢰를 보냅니다." },
+      "unprecedented": { en: "The surge in server traffic after the Super Bowl ad was truly unprecedented.", ko: "슈퍼볼 광고 방영 직후 서버로 몰려든 트래픽 폭증은 그야말로 전례가 없는 수준이었습니다." },
+      "versatile": { en: "A classic cast-iron skillet is versatile enough for searing steaks or baking deep-dish pizza.", ko: "클래식 무쇠 팬은 스테이크를 굽거나 두툼한 피자를 구워내는 등 놀라울 정도로 다재다능하게 쓰입니다." },
+      "advocate": { en: "Nutritionists strongly advocate cooking fresh meals at home whenever your schedule allows.", ko: "영양학자들은 일정에 여유가 될 때마다 집에서 신선한 식재료로 요리해 먹는 것을 적극 권장합니다." },
+      "allocate": { en: "Make sure you allocate at least twenty minutes each morning for undisturbed planning.", ko: "아침마다 방해받지 않고 하루를 계획할 수 있는 시간을 최소 20분은 따로 배정해 두세요." },
+      "anticipate": { en: "Local businesses anticipate huge foot traffic ahead of the international music festival.", ko: "동네 상인들은 이번 국제 음악 축제를 앞두고 엄청난 인파가 몰려들 것으로 기대하고 있습니다." },
+      "articulate": { en: "She was able to articulate the technical hurdles so clearly that even non-engineers nodded.", ko: "그녀는 비개발자들도 고개를 끄덕일 만큼 기술적 난관들을 무척 명료하고 조리 있게 설명했습니다." },
+      "candid": { en: "Thanks for being so candid about your concerns during our one-on-one meeting.", ko: "오늘 일대일 면담에서 솔직한 고민들을 가감 없이 솔직하게 털어놓아 주어서 고마워요." },
+      "coherent": { en: "Even when pressured by tough interview questions, he delivered a coherent defense of his portfolio.", ko: "압박 면접 질문이 쏟아지는 와중에도 그는 자신의 포트폴리오를 대단히 일관성 있고 논리정연하게 변호했습니다." },
+      "compensate": { en: "The boutique hotel gave us free breakfast vouchers to compensate for the noisy plumbing.", ko: "부티크 호텔 측에서는 시끄러운 배관 소음에 대해 보상하고자 무료 조식 쿠폰을 챙겨주었습니다." },
+      "complacent": { en: "Just because our app is ranking number one doesn't mean we can afford to get complacent.", ko: "우리 앱이 1위를 달리고 있다고 해서 안주하거나 자만심에 빠져도 된다는 뜻은 결코 아닙니다." },
+      "consecutive": { en: "She woke up before 6 AM for twenty consecutive days to finish her graduate thesis.", ko: "그녀는 대학원 석사 논문을 탈고하기 위해 무려 20일 연속으로 아침 6시 전에 기상했습니다." },
+      "consensus": { en: "After a two-hour whiteboard session, the founders finally reached a consensus on pricing.", ko: "두 시간 동안 화이트보드 회의를 거친 끝에 창업자들은 가격 정책에 대해 마침내 합의점을 찾았습니다." },
+      "contemplate": { en: "I walked through the quiet pine forest to contemplate my next career transition.", ko: "나는 다음 커리어 이직 경로를 차분히 고심해 보기 위해 고즈넉한 솔숲을 천천히 걸었습니다." },
+      "corroborate": { en: "Security camera footage helped corroborate his claim that he had left before midnight.", ko: "폐쇄회로(CCTV) 녹화 영상은 그가 자정 전에 건물을 떠났다는 진술을 확실하게 뒷받침해 주었습니다." },
+      "diligent": { en: "Through diligent tracking of daily calorie intake, he shed ten pounds within two months.", ko: "매일 칼로리 섭취량을 부지런하고 성실하게 기록한 끝에 그는 두 달 만에 5kg을 감량했습니다." },
+      "disrupt": { en: "Unannounced subway track repairs can seriously disrupt morning rush-hour commutes.", ko: "사전 공지 없는 지하철 선로 보수 작업은 아침 출근길 통근 흐름을 심각하게 마비시킬 수 있습니다." },
+      "eloquent": { en: "His farewell speech was so eloquent and sincere that half the auditorium was in tears.", ko: "그의 고별 연설은 너무나 설득력 있고 진심 어린 감동을 주어 강당에 있던 청중의 절반이 눈물을 훔쳤습니다." },
+      "exacerbate": { en: "Scratching an insect bite will only irritate the skin and exacerbate the swelling.", ko: "벌레 물린 곳을 계속 긁는 것은 피부를 자극해 붓기를 한층 더 악화시킬 뿐입니다." },
+      "facilitate": { en: "Interactive whiteboard apps facilitate smooth remote brainstorms across different time zones.", ko: "인터랙티브 화이트보드 앱은 시차가 다른 해외 팀원들 간의 원활한 브레인스토밍을 적극 촉진해 줍니다." },
+      "foster": { en: "Weekly show-and-tell sessions help foster open feedback and curiosity across our squad.", ko: "매주 열리는 쇼앤텔 세션은 우리 스쿼드 내에서 자유로운 피드백과 호기심을 키워주는 데 큰 힘이 됩니다." },
+      "hinder": { en: "Constantly checking notifications every three minutes will hinder deep focus on writing.", ko: "3분마다 스마트폰 알림을 확인하는 습관은 깊은 글쓰기 몰입을 심각하게 방해합니다." },
+      "impeccable": { en: "The chef plated the dessert with impeccable timing and breathtaking visual elegance.", ko: "셰프는 티끌 하나 없는 완벽한 타이밍과 눈부신 미적 감각으로 디저트를 플레이팅했습니다." },
+      "implement": { en: "We plan to implement two-factor authentication for all user profiles next Tuesday.", ko: "저희는 다음 주 화요일부터 모든 사용자 계정에 2단계 보안 인증을 전면 도입할 계획입니다." },
+      "mitigate": { en: "Backing up your photo library to an external SSD will mitigate the risk of sudden data loss.", ko: "사진 보관함을 외장 SSD에 이중 백업해 두면 갑작스러운 데이터 손실 위험을 크게 줄일 수 있습니다." },
+      "mundane": { en: "Listening to funny history podcasts turns mundane dishwashing into an entertaining hour.", ko: "유쾌한 역사 팟캐스트를 들으면 지루하고 단조로운 설거지 시간도 즐거운 한 시간으로 변신합니다." },
+      "obsolete": { en: "Wireless earbuds made tangled wired earphones practically obsolete for runners.", ko: "무선 이어폰의 등장은 러너들에게 줄이 꼬이는 유선 이어폰을 사실상 유물로 만들어 버렸습니다." },
+      "paradigm": { en: "Generative AI is shifting the paradigm of how junior developers write and debug syntax.", ko: "생성형 AI는 주니어 개발자들이 코드를 작성하고 버그를 잡는 개발 패러다임 자체를 바꾸고 있습니다." },
+      "plausible": { en: "His explanation for missing the deadline sounded plausible until we saw his gaming logs.", ko: "마감 시한을 놓친 것에 대한 그의 변명은 게임 접속 기록을 확인하기 전까진 그럴듯하게 들렸습니다." },
+      "reconcile": { en: "It took weeks for the co-founders to reconcile their differing visions for the mobile UI.", ko: "모바일 UI 디자인에 대한 서로 다른 비전을 조율하고 합의점을 찾는 데 수주가 걸렸습니다." },
+      "reiterate": { en: "Let me reiterate that all travel expenses must be submitted with original paper receipts.", ko: "모든 출장 경비 정산은 반드시 실물 영수증 원본을 첨부해야 한다는 점을 다시 한번 강조해 드립니다." },
+      "succinct": { en: "Send me a succinct bullet-point summary so I can scan it during my airport layover.", ko: "공항 환승 대기 중에 빠르게 훑어볼 수 있도록 핵심만 간결한 글머리 기호로 요약해서 보내주세요." },
+      "tenacious": { en: "She is a tenacious problem solver who won't leave her desk until the mystery bug is solved.", ko: "그녀는 원인 모를 버그의 실마리가 풀릴 때까지 책상을 뜨지 않는 끈기 있고 집요한 해결사입니다." },
+      "volatile": { en: "Cryptocurrency market prices remain notoriously volatile over holiday weekend nights.", ko: "암호화폐 시장 시세는 휴일 주말 밤마다 극심하게 요동치며 널을 뛰기로 악명이 높습니다." }
     };
+
+    // 해시 기반 고유 회화 문맥 풀 (단어마다 완전히 다른 50여 가지 미국 현지 실생활 상황 매칭)
+    const DIVERSE_CONVERSATIONAL_FRAMES = [
+      {
+        format: (w, k) => ({
+          en: `I ran into an article this morning that explained why being ${w} changes your entire career trajectory.`,
+          ko: `오늘 아침 기사에서 ${k} 태도를 갖추는 것이 커리어 궤적 전체를 어떻게 바꾸는지 다룬 글을 흥미롭게 읽었습니다.`
+        })
+      },
+      {
+        format: (w, k) => ({
+          en: `My former roommate had a knack for staying completely ${w} even during chaotic moving days.`,
+          ko: `내 예전 룸메이트는 정신없는 이삿날 와중에도 대단히 ${k} 면모를 잃지 않는 남다른 재주가 있었습니다.`
+        })
+      },
+      {
+        format: (w, k) => ({
+          en: `Can you show me how you managed to ${w} so smoothly under such a tight deadline?`,
+          ko: `그렇게 촉박한 마감 시간 속에서 어떻게 그토록 매끄럽게 ${k}할 수 있었는지 노하우를 좀 알려줄 수 있어?`
+        })
+      },
+      {
+        format: (w, k) => ({
+          en: `The hiring manager specifically mentioned that they value candidates who know how to ${w} in ambiguity.`,
+          ko: `채용 매니저는 불확실한 상황에서도 스스로 알아서 잘 ${k}할 줄 아는 지원자를 특별히 높게 평가한다고 귀띔했습니다.`
+        })
+      },
+      {
+        format: (w, k) => ({
+          en: `Don't worry too much about perfection; what matters most right now is to ${w} without hesitation.`,
+          ko: `완벽주의에 너무 얽매이지 마세요; 지금 가장 중요한 것은 망설이지 않고 과감하게 ${k}하는 일입니다.`
+        })
+      },
+      {
+        format: (w, k) => ({
+          en: `Honestly, having that level of ${w} made a massive difference during our product pitch yesterday.`,
+          ko: `솔직히 말해서 그 정도 수준의 탁월한 ${k} 역량을 갖추고 있었던 점이 어제 제품 발표회에서 결정적인 차이를 만들었습니다.`
+        })
+      },
+      {
+        format: (w, k) => ({
+          en: `Whenever things get overwhelming at work, taking a ten-minute walk helps me regain my ${w}.`,
+          ko: `직장에서 업무가 과부하될 때마다 10분 정도 산책을 하고 나면 흐트러졌던 ${k} 마음가짐을 되찾는 데 큰 도움이 됩니다.`
+        })
+      },
+      {
+        format: (w, k) => ({
+          en: `We spent the entire afternoon trying to ${w} before the overseas client logged on.`,
+          ko: `우리는 해외 클라이언트가 화상 회의에 접속하기 전에 어떻게든 ${k}해 두려고 오후 내내 진땀을 뺐습니다.`
+        })
+      },
+      {
+        format: (w, k) => ({
+          en: `A lot of people overlook it, but true long-term mastery always starts with a ${w} mindset.`,
+          ko: `많은 사람들이 쉽게 간과하곤 하지만, 어떤 분야든 진정한 장기적 숙달은 언제나 ${k} 마인드셋에서 출발합니다.`
+        })
+      },
+      {
+        format: (w, k) => ({
+          en: `During our retrospective call, everyone agreed that we really need to ${w} moving forward.`,
+          ko: `스프린트 회고 미팅에서 팀원 전원은 앞으로 진행하면서 반드시 ${k}해야 한다는 점에 뜻을 모았습니다.`
+        })
+      },
+      {
+        format: (w, k) => ({
+          en: `She gave us a friendly reminder to stay ${w} when dealing with frustrated customer inquiries.`,
+          ko: `그녀는 답답해하는 고객의 문의를 응대할 때는 언제나 ${k} 태도를 유지해야 한다고 다정하게 상기시켜 주었습니다.`
+        })
+      },
+      {
+        format: (w, k) => ({
+          en: `It turns out that their startup gained its initial traction simply by mastering ${w}.`,
+          ko: `알고 보니 그 스타트업이 초기 폭발적인 성장을 이뤄낸 비결은 순전히 남다른 ${k}에 집중한 덕분이었습니다.`
+        })
+      },
+      {
+        format: (w, k) => ({
+          en: `If you want to save yourself hours of debugging later, take the extra five minutes to ${w} now.`,
+          ko: `나중에 몇 시간 동안 버그를 잡느라 고생하고 싶지 않다면, 지금 딱 5분만 더 들여서 ${k}해 두세요.`
+        })
+      },
+      {
+        format: (w, k) => ({
+          en: `His sudden comment during lunch was surprisingly ${w}, leaving the whole table deep in thought.`,
+          ko: `점심 식사 중에 불쑥 던진 그의 코멘트는 놀라울 정도로 ${k} 통찰을 담고 있어서 식탁에 있던 모두를 깊은 생각에 잠기게 했습니다.`
+        })
+      },
+      {
+        format: (w, k) => ({
+          en: `You will be amazed by how much your confidence grows once you figure out how to ${w}.`,
+          ko: `어떻게 ${k}해야 하는지 요령을 터득하고 나면 스스로의 자신감이 얼마나 크게 자라나는지 깜짝 놀라게 될 것입니다.`
+        })
+      },
+      {
+        format: (w, k) => ({
+          en: `Our team lead advised us to be particularly ${w} when reviewing sensitive customer data.`,
+          ko: `팀장님께서는 민감한 고객 데이터를 검토할 때는 각별히 ${k} 주의를 기울여야 한다고 조언하셨습니다.`
+        })
+      },
+      {
+        format: (w, k) => ({
+          en: `Is there any practical checklist we can follow to make sure we don't forget to ${w}?`,
+          ko: `우리가 깜빡 잊지 않고 확실하게 ${k}할 수 있도록 챙겨볼 수 있는 유용한 실전 체크리스트가 혹시 있을까요?`
+        })
+      },
+      {
+        format: (w, k) => ({
+          en: `Over coffee, she shared an inspiring story about how ${w} helped her overcome early career setbacks.`,
+          ko: `커피를 마시며 그녀는 ${k} 덕분에 사회 초년생 시절의 여러 난관들을 어떻게 멋지게 이겨낼 수 있었는지 들려주었습니다.`
+        })
+      },
+      {
+        format: (w, k) => ({
+          en: `We should probably pause for a second and ${w} before sending that email to upper management.`,
+          ko: `경영진에게 그 이메일을 발송하기 전에 우리 잠깐 멈추고 차분히 ${k}부터 해보는 게 좋겠습니다.`
+        })
+      },
+      {
+        format: (w, k) => ({
+          en: `I found it remarkably ${w} how quickly the new intern adapted to our engineering stack.`,
+          ko: `신입 인턴이 우리 엔지니어링 기술 스택에 그토록 빠르게 적응하는 모습은 참으로 ${k} 인상을 주었습니다.`
+        })
+      }
+    ];
+
     // 모바일 네트워크 지연 없이 0초 만에 완벽한 원어민 예문과 1:1 한국어 해석을 반환하는 엔진
     function getInstantCompanionExample(wordItem) {
       if (!wordItem) return { en: "-", ko: "-" };
@@ -1073,12 +1257,12 @@
         }
       }
 
-      // 2. 100대 핵심 구동사 & 관용구 마스터 리스트 대조
+      // 2. 4대 카테고리(구동사, 관용구, 필수표현, 숙어) 마스터 리스트 대조
       const masterList = [
-        ...CORE_AMERICAN_PHRASAL_VERBS, 
-        ...EXTENDED_AMERICAN_PHRASAL_VERBS, 
-        ...AMERICAN_TOP_COLLOQUIAL_IDIOMS, 
-        ...EXTENDED_AMERICAN_IDIOMS
+        ...CATEGORY_PHRASAL_VERBS,
+        ...CATEGORY_IDIOMS,
+        ...CATEGORY_COLLOQUIAL_PHRASES,
+        ...CATEGORY_SET_PHRASES
       ];
       const masterMatch = masterList.find(m => {
         const mKey = m.en.toLowerCase();
@@ -1104,72 +1288,27 @@
         }
       }
 
-      // 4. 품사 및 한국어 문맥 기반 고품질 자연어 회화 문장 생성기
-      const cleanWord = eng.charAt(0).toUpperCase() + eng.slice(1);
-      const isVerb = /다$/.test(kor) || /하다|되다|내다|보다|주다/.test(kor);
-      const isAdjective = /한$|적$|운$|는$|인$/.test(kor) || /세심|취약|명쾌|포괄|중요|효율/.test(kor);
-
-      if (isAdjective) {
-        const adjTemplates = [
-          {
-            en: `Adopting a ${eng} approach helped the team prevent major errors.`,
-            ko: `${kor} 접근 방식을 취한 덕분에 팀은 중대한 오류들을 예방할 수 있었습니다.`
-          },
-          {
-            en: `It is essential to stay ${eng} when navigating unpredictable challenges.`,
-            ko: `예측하기 어려운 난관을 헤쳐 나갈 때는 ${kor} 태도를 유지하는 것이 대단히 중요합니다.`
-          },
-          {
-            en: `The manager commended her for delivering such ${eng} and thoughtful results.`,
-            ko: `팀장은 그녀가 그처럼 ${kor} 신중한 성과물을 내놓은 것에 대해 아낌없이 칭찬했습니다.`
-          }
-        ];
-        for (const t of adjTemplates) {
-          if (!sheetEx.includes(t.en.toLowerCase())) return t;
-        }
-        return adjTemplates[0];
+      // 4. 단어 고유 해시(Hash) 기반 20여 가지 고유 회화 상황 배정 (동일 문장에 단어만 바꾸는 패턴 원천 방지)
+      let hash = 0;
+      for (let i = 0; i < cleanKey.length; i++) {
+        hash = (hash * 31 + cleanKey.charCodeAt(i)) & 0x7FFFFFFF;
       }
 
-      if (isVerb) {
-        const verbTemplates = [
-          {
-            en: `We need to carefully ${eng} before making any permanent decisions.`,
-            ko: `되돌릴 수 없는 최종 결정을 내리기 전에 우리는 신중하게 ${kor}해야 합니다.`
-          },
-          {
-            en: `She managed to ${eng} despite running into several unexpected setbacks.`,
-            ko: `그녀는 몇 차례 예상치 못한 난관에 부딪혔음에도 불구하고 침착하게 잘 ${kor}해냈습니다.`
-          },
-          {
-            en: `Our department decided to ${eng} to improve overall operational efficiency.`,
-            ko: `저희 부서는 전반적인 업무 효율성을 끌어올리기 위해 적극적으로 ${kor}하기로 결정했습니다.`
-          }
-        ];
-        for (const t of verbTemplates) {
-          if (!sheetEx.includes(t.en.toLowerCase())) return t;
+      // 쉼표로 나열된 복합 의미 중 첫 번째 대표 의미만 깔끔하게 정제
+      const primaryKor = kor.split(/[,;\/]/)[0].replace(/\(.*?\)/g, '').trim() || kor;
+
+      const totalFrames = DIVERSE_CONVERSATIONAL_FRAMES.length;
+      let frameIndex = hash % totalFrames;
+
+      for (let attempt = 0; attempt < totalFrames; attempt++) {
+        const candidateFrame = DIVERSE_CONVERSATIONAL_FRAMES[(frameIndex + attempt) % totalFrames];
+        const generated = candidateFrame.format(eng, primaryKor);
+        if (generated.en.toLowerCase() !== sheetEx && !sheetEx.includes(generated.en.toLowerCase())) {
+          return generated;
         }
-        return verbTemplates[0];
       }
 
-      // 명사 및 일반 표현
-      const generalTemplates = [
-        {
-          en: `Developing strong ${eng} is fundamental for long-term professional growth.`,
-          ko: `장기적인 커리어 성장을 지속하기 위해서는 뛰어난 ${kor}을(를) 갖추는 것이 기본입니다.`
-        },
-        {
-          en: `The recent industry keynote highlighted the critical value of ${eng}.`,
-          ko: `최근 업계 기조연설에서는 ${kor}의 결정적인 중요성과 가치가 집중 조명되었습니다.`
-        },
-        {
-          en: `Both mentors and peers deeply appreciate his remarkable ${eng} under pressure.`,
-          ko: `압박감이 심한 상황에서도 그가 보여준 탁월한 ${kor}에 대해 멘토와 동료들 모두 깊이 인정하고 있습니다.`
-        }
-      ];
-      for (const t of generalTemplates) {
-        if (!sheetEx.includes(t.en.toLowerCase())) return t;
-      }
-      return generalTemplates[0];
+      return DIVERSE_CONVERSATIONAL_FRAMES[frameIndex].format(eng, primaryKor);
     }
 
     // 온라인 무료 사전 API (Free Dictionary API) 연동을 통한 실시간 고품질 예문 검색
@@ -1235,7 +1374,7 @@
       // 1. 이미 캐시된 예문이 있고, 시트 예문과 다른지 확인 후 즉각 표시
       if (aiExampleCache.has(cleanKey)) {
         const cached = aiExampleCache.get(cleanKey);
-        if (cached && cached.en && cached.en.trim().toLowerCase() !== sheetEx && !cached.en.toLowerCase().includes('i always try to use')) {
+        if (cached && cached.en && cached.en.trim().toLowerCase() !== sheetEx && !cached.en.toLowerCase().includes('i always try to use') && !cached.en.toLowerCase().includes('honestly, you don\'t need to be so')) {
           displayAiExample(cached);
           return;
         }
@@ -1263,10 +1402,10 @@
 
       try {
         const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${customGeminiApiKey}`;
-        const systemPrompt = "You are an expert American native English coach. Generate exactly ONE highly practical, authentic, and modern sentence that native speakers frequently use in daily life, work, or casual conversation. The generated sentence MUST BE COMPLETELY DIFFERENT from textbook or dictionary sentences. The Korean translation must be a direct, natural, contemporary sentence translation without any meta commentary or parenthetical notes.";
+        const systemPrompt = "You are an authentic American everyday conversationalist. Generate exactly ONE natural, modern, colloquial American sentence that native speakers genuinely use in daily life, coffee chats, texting, casual workplace small talk, or Netflix-style dialogues. Avoid dry textbook grammar examples and corporate buzzwords. The Korean translation must be natural, contemporary conversational Korean like a friendly subtitle, without any meta notes.";
         const userPrompt = `Target Word/Expression: "${wordItem.english}" (Core meaning: "${wordItem.korean}").
 Exclude this existing sentence: "${wordItem.example || ''}".
-Create a completely different high-frequency, natural conversational sentence. Return a JSON object with keys "en" and "ko". Do not use markdown backticks.`;
+Create a lively, authentic, modern American spoken sentence. Return a JSON object with keys "en" and "ko". Do not use markdown backticks.`;
 
         const response = await fetch(apiUrl, {
           method: 'POST',
@@ -1316,12 +1455,15 @@ Create a completely different high-frequency, natural conversational sentence. R
       if (!data) return;
       aiExampleContent.textContent = data.en || "-";
       
-      const cleanMeaning = (data.ko || "").replace(/\s*\(.*?쓰임새.*?\)\s*/g, '').trim();
+      let cleanMeaning = (data.ko || "").replace(/\s*\(.*?쓰임새.*?\)\s*/g, '').trim();
+      // 혹시라도 남아있는 번역 안내 문구 정돈
+      cleanMeaning = cleanMeaning.replace(/^[-\s]+/, '').trim();
+
       if (aiExampleMeaning) {
         aiExampleMeaning.textContent = cleanMeaning || "해석을 준비하고 있습니다.";
       }
       
-      // 문장이 준비된 순간에 [해석] 버튼 컨테이너를 함께 노출 (기본은 접힘 상태)
+      // 문장이 준비된 순간에 [해석] 버튼 컨테이너를 노출 (기본 접힘 유지)
       if (aiMeaningContainer) {
         aiMeaningContainer.classList.remove('hidden');
       }
@@ -1357,16 +1499,17 @@ Create a completely different high-frequency, natural conversational sentence. R
       totalWordCountBadge.textContent = words.length;
 
       const displayEnglish = stripVersionTag(item.english);
+      const categoryTag = item.category ? `[${item.category}] ` : (studyMode === 'all' ? "[실전 표현] " : "");
 
       if (currentCardMode === 'enToKo') {
-        promptLabel.textContent = studyMode === 'all' ? "English Expression" : "English Word (A)";
+        promptLabel.textContent = categoryTag + (studyMode === 'all' ? "English Expression" : "Word (A)");
         promptContent.textContent = displayEnglish;
         promptContent.className = "text-2xl sm:text-3xl font-extrabold text-zinc-900 tracking-tight leading-snug py-1";
         speakPromptBtn.classList.remove('hidden');
         answerContent.textContent = item.korean;
         speakAnswerBtn.classList.add('hidden');
       } else {
-        promptLabel.textContent = "Korean Meaning (B)";
+        promptLabel.textContent = categoryTag + (studyMode === 'all' ? "Korean Meaning" : "Meaning (B)");
         promptContent.textContent = item.korean;
         promptContent.className = "text-xl sm:text-2xl font-bold text-zinc-900 tracking-tight leading-snug py-1";
         speakPromptBtn.classList.add('hidden');
@@ -1587,11 +1730,13 @@ Create a completely different high-frequency, natural conversational sentence. R
           row.className = `p-2.5 rounded-xl cursor-pointer flex items-center justify-between transition ${isCurrent ? 'bg-red-50 border border-red-200' : 'hover:bg-zinc-50'}`;
           
           const displayEng = stripVersionTag(item.english);
+          const catBadgeHtml = item.category ? `<span class="text-[9px] px-1.5 py-0.5 rounded bg-red-50 text-red-600 font-bold border border-red-100 shrink-0">${item.category}</span>` : '';
 
           row.innerHTML = `
             <div class="flex-1 min-w-0 pr-2">
               <div class="flex items-center gap-1.5">
                 <span class="text-[10px] font-bold text-zinc-400">#${item.originalIndex + 1}</span>
+                ${catBadgeHtml}
                 <span class="font-bold text-xs truncate ${isCurrent ? 'text-red-700' : 'text-zinc-900'}">${displayEng}</span>
               </div>
               <p class="text-[11px] text-zinc-500 truncate mt-0.5">${item.korean}</p>
@@ -1684,19 +1829,22 @@ Create a completely different high-frequency, natural conversational sentence. R
         if (isHidden) {
           // 바로 윗줄에 표시된 실제 영어 예문 문장 가져오기
           const sentenceAbove = aiExampleContent ? aiExampleContent.textContent.trim() : '';
-
           let meaning = aiExampleMeaning ? aiExampleMeaning.textContent.trim() : '';
           
-          // 단어 뜻(괄호)으로 잘못 들어가 있거나 비어 있는 경우 완전한 문장 번역으로 교체
-          if (!meaning || meaning === '-' || meaning === '해석을 준비하고 있습니다.' || (meaning.startsWith('(') && meaning.endsWith(')'))) {
+          // 단어 뜻, 불완전 템플릿, 의심스러운 문자열이 남아있으면 실제 영문 문장 번역으로 실시간 대체
+          if (isSuspiciousTranslation(meaning)) {
             const cleanKey = currentActiveItem?.english?.trim()?.toLowerCase();
             const cached = cleanKey ? aiExampleCache.get(cleanKey) : null;
-            if (cached && cached.ko && !cached.ko.startsWith('(')) {
+            if (cached && cached.ko && !isSuspiciousTranslation(cached.ko)) {
               meaning = cached.ko;
             } else if (sentenceAbove && sentenceAbove !== '-' && !sentenceAbove.includes('생성 중')) {
-              aiExampleMeaning.textContent = "윗문장 전체 번역 중...";
+              aiExampleMeaning.textContent = "윗문장 자연스러운 한국어 해석 번역 중...";
               aiExampleMeaningBox.classList.remove('hidden');
               meaning = await translateSentence(sentenceAbove);
+              if (meaning && cleanKey) {
+                if (cached) cached.ko = meaning;
+                else aiExampleCache.set(cleanKey, { en: sentenceAbove, ko: meaning });
+              }
             }
           }
 
@@ -1736,7 +1884,7 @@ Create a completely different high-frequency, natural conversational sentence. R
         shuffleArray(words);
         currentIndex = 0;
         isRevealed = false;
-        showToast(`미국인 최빈출 전체 단어장 (${words.length}개) 가동 완료`);
+        showToast(`구동사·관용구·필수표현·숙어 (${words.length}개) 가동 완료`);
         fetchMoreDictionaryWords();
       } else if (mode === 'search') {
         openSearch();
