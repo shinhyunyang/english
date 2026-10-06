@@ -482,7 +482,7 @@
     let sheetWords = [...FALLBACK_WORDS];
     let allDictionaryWords = [];
 
-    // --- 미국인 최빈출 핵심 구동사 및 일상 회화 마스터 어휘 풀 ---
+    // --- 미국인 최빈출 핵심 구동사 풀 (Top High-Frequency Phrasal Verbs) ---
     const CORE_AMERICAN_PHRASAL_VERBS = [
       { en: "figure out", ko: "알아내다, 생각해내다", ex: "I can't figure out why this code isn't working.", koEx: "이 코드가 왜 안 돌아가는지 도저히 알아낼 수가 없어." },
       { en: "come up with", ko: "생각해내다, 제안하다", ex: "She came up with a brilliant idea for the marketing campaign.", koEx: "그녀는 마케팅 캠페인을 위한 기발한 아이디어를 생각해냈습니다." },
@@ -517,7 +517,7 @@
       { en: "keep up with", ko: "따라잡다, 뒤처지지 않다", ex: "It's hard to keep up with the latest technological changes.", koEx: "최신 기술 변화를 뒤처지지 않고 계속 따라잡는 것은 쉽지 않습니다." },
       { en: "settle down", ko: "진정하다, 정착하다", ex: "After traveling for years, she finally decided to settle down.", koEx: "수년간 여행을 다닌 후, 그녀는 마침내 한곳에 정착하기로 결심했습니다." },
       { en: "take after", ko: "~을 닮다", ex: "He really takes after his father in both looks and temperament.", koEx: "그는 외모와 성격 모두에서 아버지를 정말 쏙 빼닮았습니다." },
-      { en: "run out", ko: "다 떨어지다, 유효기간이 끝나다", ex: "My passport will run out in three months.", koEx: "내 여권 만료일이 3개월 후면 다 끝납니다." },
+      { en: "run out", ko: "다 떨어지다, 바닥나다", ex: "Our patience is starting to run out.", koEx: "우리의 인내심도 슬슬 바닥나기 시작하고 있어." },
       { en: "stand out", ko: "눈에 띄다, 두드러지다", ex: "Her creative resume really stood out from the crowd.", koEx: "그녀의 창의적인 이력서는 수많은 지원자들 사이에서 단연 눈에 띄었습니다." },
       { en: "break down", ko: "고장 나다, 감정이 무너지다", ex: "My car broke down right in the middle of rush hour traffic.", koEx: "출퇴근 혼잡 시간 한가운데에서 내 차가 고장이 나 버렸어." },
       { en: "call on", ko: "지목하다, 요청하다", ex: "The professor called on me to answer the first question.", koEx: "교수님께서 첫 번째 질문에 답하라고 나를 지목하셨어." },
@@ -536,6 +536,7 @@
       { en: "tear down", ko: "철거하다, 허물다", ex: "The city plans to tear down the abandoned factory downtown.", koEx: "시는 도심의 방치된 폐공장을 전면 철거할 계획입니다." }
     ];
 
+    // --- 미국인 최빈출 필수 관용구 및 일상 이디엄 (Top Everyday Idioms & Colloquialisms) ---
     const AMERICAN_TOP_COLLOQUIAL_IDIOMS = [
       { en: "no-brainer", ko: "쉬운 결정, 고민할 필요도 없는 일", ex: "Accepting that full scholarship was an absolute no-brainer.", koEx: "전액 장학금을 수락하는 건 정말 전혀 고민할 필요조차 없는 당연한 결정이었어." },
       { en: "hit the nail on the head", ko: "정곡을 찌르다, 정확히 맞히다", ex: "Her analysis of the market hit the nail on the head.", koEx: "시장에 대한 그녀의 분석은 아주 정확하게 정곡을 찔렀습니다." },
@@ -556,47 +557,6 @@
       { en: "bring to the table", ko: "기여하다, 역량을 발휘하다", ex: "What special skills can you bring to the table as a product lead?", koEx: "당신은 프로덕트 리드로서 팀에 어떤 특별한 강점과 역량을 기여할 수 있나요?" },
       { en: "second thoughts", ko: "다시 생각해보니 드는 의구심", ex: "Are you having second thoughts about signing the contract?", koEx: "계약서에 서명하는 것에 대해 다시 생각해보니 마음에 망설임이 생기나요?" },
       { en: "take for granted", ko: "당연하게 여기다", ex: "Never take your good health and loyal friends for granted.", koEx: "당신의 건강과 곁에 있는 진실한 친구들을 절대로 당연한 것으로 여기지 마세요." },
-      { en: "straightforward", ko: "명확하고 직관적인, 솔직한", ex: "The instructions were clear and very straightforward.", koEx: "안내 지침은 대단히 명확하고 아주 직관적이었습니다." }
-    ];
-
-    const AMERICAN_DAILY_POWER_VERBS = [
-      { v: "handle", ko: "처리하다, 감당하다", ex: "Can you handle the customer inquiry while I'm away?", koEx: "내가 자리 비운 사이에 이 고객 문의 좀 맡아서 처리해 줄 수 있어?" },
-      { v: "tackle", ko: "문제를 적극 해결하다, 씨름하다", ex: "Let's tackle the most urgent bottleneck first.", koEx: "가장 시급한 병목 현상부터 먼저 적극적으로 해결해 봅시다." },
-      { v: "prioritize", ko: "우선순위를 매기다", ex: "You need to prioritize high-impact deliverables.", koEx: "성과 영향력이 큰 핵심 산출물들에 우선순위를 매겨야 합니다." },
-      { v: "streamline", ko: "효율화하다, 간소화하다", ex: "Automating emails will streamline our daily workflow.", koEx: "이메일을 자동화하면 우리의 일상 업무 흐름을 크게 효율화할 수 있습니다." },
-      { v: "leverage", ko: "지렛대로 삼다, 십분 활용하다", ex: "We can leverage social media to expand our user reach.", koEx: "우리는 사용자 접점을 넓히기 위해 소셜 미디어를 십분 활용할 수 있습니다." },
-      { v: "collaborate", ko: "협업하다, 함께 일하다", ex: "Our design and engineering teams collaborate seamlessly.", koEx: "저희 디자인팀과 엔지니어링팀은 아주 매끄럽게 긴밀히 협업합니다." },
-      { v: "anticipate", ko: "예상하다, 내다보다", ex: "We anticipate a significant spike in holiday sales.", koEx: "우리는 연말 휴가철 매출이 크게 급증할 것으로 예상하고 있습니다." },
-      { v: "clarify", ko: "명확히 설명하다, 밝히다", ex: "Could you clarify the second bullet point in your summary?", koEx: "요약본의 두 번째 항목에 대해 조금 더 명확하게 설명해 주시겠어요?" },
-      { v: "accommodate", ko: "편의를 봐주다, 수용하다", ex: "We will do our best to accommodate your schedule changes.", koEx: "고객님의 일정 변경 요청에 최대한 편의를 맞춰드릴 수 있도록 하겠습니다." },
-      { v: "navigate", ko: "헤쳐 나가다, 길을 찾다", ex: "She helped the startup navigate strict legal regulations.", koEx: "그녀는 그 스타트업이 까다로운 법률 규제들을 현명하게 헤쳐 나가도록 도왔습니다." },
-      { v: "facilitate", ko: "수월하게 돕다, 촉진하다", ex: "The moderator helped facilitate a productive discussion.", koEx: "사회자는 생산적인 토론이 원활하게 진행될 수 있도록 촉진해 주었습니다." },
-      { v: "resonate", ko: "깊은 공감을 불러일으키다", ex: "Her heartfelt personal story really resonated with the audience.", koEx: "그녀의 진심 어린 개인적 이야기는 청중들에게 깊은 공감을 불러일으켰습니다." },
-      { v: "mitigate", ko: "완화하다, 피해를 줄이다", ex: "We installed redundant backup systems to mitigate server risks.", koEx: "우리는 서버 장애 리스크를 완화하기 위해 이중화 백업 시스템을 설치했습니다." },
-      { v: "optimize", ko: "최적화하다, 효율을 극대화하다", ex: "Engineers constantly optimize code to extend smartphone battery life.", koEx: "엔지니어들은 스마트폰 배터리 수명을 늘리기 위해 코드를 끊임없이 최적화합니다." },
-      { v: "pivot", ko: "방향을 신속히 전환하다", ex: "The business had to pivot to an online model during lockdown.", koEx: "그 기업은 이동 제한 기간 동안 온라인 비즈니스 모델로 신속하게 방향을 전환해야 했습니다." }
-    ];
-
-    const AMERICAN_DAILY_ADJECTIVES = [
-      { adj: "pragmatic", ko: "실용적인, 현실적인", ex: "We need a pragmatic approach rather than wishful thinking.", koEx: "우리는 막연한 희망 사항보다는 현실적이고 실용적인 접근법이 필요합니다." },
-      { adj: "meticulous", ko: "꼼꼼한, 세심한", ex: "He is always meticulous when reviewing financial spreadsheets.", koEx: "그는 재무 스프레드시트를 검토할 때 언제나 대단히 세심하고 꼼꼼합니다." },
-      { adj: "resilient", ko: "회복력이 좋은, 탄력 있는", ex: "The local economy proved surprisingly resilient after the crisis.", koEx: "지역 경제는 위기 이후 놀라울 정도로 튼튼한 회복력을 입증해 보였습니다." },
-      { adj: "relatable", ko: "누구나 공감할 수 있는, 친근한", ex: "Her humor makes her lessons so accessible and relatable.", koEx: "그녀의 위트 있는 유머는 수업을 누구나 쉽게 이해하고 깊이 공감할 수 있게 만듭니다." },
-      { adj: "spontaneous", ko: "즉흥적인, 자연스러운", ex: "We went on a spontaneous late-night road trip to the beach.", koEx: "우리는 한밤중에 즉흥적으로 바닷가로 드라이브 여행을 훌쩍 떠났습니다." },
-      { adj: "overwhelmed", ko: "정신없이 벅찬, 압도당한", ex: "I felt overwhelmed with multiple project deadlines at work.", koEx: "직장에서 여러 프로젝트 마감 기한이 한꺼번에 겹쳐서 정신없이 벅찼습니다." },
-      { adj: "insightful", ko: "통찰력 있는, 예리한", ex: "The keynote speaker shared deeply insightful tips on productivity.", koEx: "기조연설자는 생산성에 관한 대단히 예리하고 통찰력 있는 팁들을 공유해 주었습니다." },
-      { adj: "coherent", ko: "조리 있는, 논리 정연한", ex: "His argument was coherent and very persuasive to investors.", koEx: "그의 주장은 논리 정연했고 투자자들에게 아주 설득력이 있었습니다." },
-      { adj: "versatile", ko: "다재다능한, 다용도의", ex: "This jacket is versatile enough for both work and casual hiking.", koEx: "이 재킷은 출근용과 가벼운 등산용 모두에 잘 어울릴 만큼 활용도가 높습니다." },
-      { adj: "indispensable", ko: "없어서는 안 될, 필수적인", ex: "A reliable smartphone has become indispensable in daily travel.", koEx: "믿을 수 있는 스마트폰은 일상과 여행에서 절대 없어서는 안 될 필수품이 되었습니다." },
-      { adj: "transparent", ko: "투명한, 솔직 담백한", ex: "We always try to be transparent about our pricing structure.", koEx: "저희는 가격 책정 구조에 대해 언제나 투명하고 솔직하게 공개하고자 노력합니다." },
-      { adj: "genuine", ko: "진심 어린, 순수한", ex: "She offered a genuine apology for the miscommunication.", koEx: "그녀는 의사소통에서 빚어진 오해에 대해 진심 어린 순수한 사과를 건넸습니다." },
-      { adj: "lucrative", ko: "수익성이 좋은, 돈이 되는", ex: "Software engineering remains one of the most lucrative career paths.", koEx: "소프트웨어 엔지니어링은 여전히 가장 수익성이 좋고 유망한 커리어 경로 중 하나입니다." },
-      { adj: "feasible", ko: "현실적으로 실현 가능한", ex: "Completing the website rewrite within three days is barely feasible.", koEx: "웹사이트 전면 개편을 단 사흘 만에 끝내는 것은 현실적으로 실현 가능성이 매우 낮습니다." },
-      { adj: "formidable", ko: "만만찮은, 강력한", ex: "Our competitors have built a formidable mobile app presence.", koEx: "경쟁사들은 모바일 앱 시장에서 대단히 강력하고 만만찮은 입지를 구축했습니다." }
-    ];
-
-    // 미국 현지 최빈출 추가 실전 어휘 및 필수 명사/부사 확장 세트
-    const AMERICAN_EXPANDED_VOCAB = [
       { en: "give a shot", ko: "한번 시도해 보다", ex: "It looks challenging, but I'll give it a shot.", koEx: "어려워 보이지만, 제가 한번 시도해 보겠습니다." },
       { en: "on the same page", ko: "생각이나 이해가 일치하는", ex: "Let's align now to make sure everyone is on the same page.", koEx: "모두가 같은 생각으로 일치하고 있는지 지금 확실히 맞춰봅시다." },
       { en: "think outside the box", ko: "고정관념을 깨고 창의적으로 생각하다", ex: "To solve this bottleneck, we must think outside the box.", koEx: "이 병목 현상을 해결하려면 고정관념에서 벗어나 창의적으로 생각해야 합니다." },
@@ -619,7 +579,85 @@
       { en: "a piece of cake", ko: "식은 죽 먹기, 아주 쉬운 일", ex: "Once you understand the basic formula, the test is a piece of cake.", koEx: "기본 공식만 한번 이해하고 나면, 그 시험은 식은 죽 먹기나 다름없습니다." }
     ];
 
-    // 3,000개 미국인 최빈출 어휘 및 실전 구동사 풀 생성기 (중첩 조합으로 정확히 3,000개 완충)
+    // --- 미국 현지 실생활 빈출 구동사 2차 확장 세트 (60개) ---
+    const EXTENDED_AMERICAN_PHRASAL_VERBS = [
+      { en: "look up to", ko: "존경하다, 우러러보다", ex: "Young athletes always look up to their veteran captains.", koEx: "어린 운동선수들은 언제나 베테랑 주장들을 존경하고 우러러봅니다." },
+      { en: "look down on", ko: "무시하다, 깔보다", ex: "Never look down on someone just because they are inexperienced.", koEx: "단지 경험이 부족하다는 이유로 남을 결코 깔보거나 무시하지 마세요." },
+      { en: "look out for", ko: "~을 보살피다, 주의하다", ex: "We need to look out for each other during the rough winter.", koEx: "혹독한 겨울 동안 우리는 서로를 잘 보살피고 챙겨주어야 합니다." },
+      { en: "look back on", ko: "뒤돌아보다, 회상하다", ex: "I look back on my college days with great fondness.", koEx: "나는 대학 시절을 대단히 따뜻하고 행복한 마음으로 뒤돌아봅니다." },
+      { en: "put away", ko: "제자리에 정리하다, 치우다", ex: "Please put away your laptop before we have dinner.", koEx: "우리 저녁 식사하기 전에 노트북 좀 제자리에 치워줘." },
+      { en: "put together", ko: "조립하다, 짜 맞추다", ex: "It took us three hours to put together the new bookshelf.", koEx: "새 책장을 조립하고 완성하는 데 세 시간이 걸렸습니다." },
+      { en: "get through", ko: "헤쳐 나가다, 연락이 닿다", ex: "She helped her friend get through a painful breakup.", koEx: "그녀는 친구가 가슴 아픈 이별을 잘 헤쳐 나갈 수 있도록 도왔습니다." },
+      { en: "get rid of", ko: "없애다, 처분하다", ex: "We decided to get rid of old clutter in the basement.", koEx: "우리는 지하실에 쌓인 오래된 잡동사니들을 처분하기로 결정했습니다." },
+      { en: "get by", ko: "그럭저럭 살아내다, 근근이 버티다", ex: "My Spanish isn't fluent, but I know enough to get by.", koEx: "내 스페인어가 유창하진 않지만, 그럭저럭 소통하며 버틸 정도는 돼." },
+      { en: "get around to", ko: "차일피일 미루다 드디어 ~하다", ex: "I finally got around to cleaning out the messy garage.", koEx: "미루고 미루다 드디어 난장판이던 차고를 청소하게 되었습니다." },
+      { en: "get away with", ko: "처벌받지 않고 무사히 넘어가다", ex: "Nobody should get away with breaking safety rules.", koEx: "그 누구도 안전 수칙을 어기고 그냥 무사히 넘어가서는 안 됩니다." },
+      { en: "take off", ko: "이륙하다, 사업이 급성장하다", ex: "Her e-commerce startup really began to take off last year.", koEx: "그녀의 이커머스 스타트업은 작년에 본격적으로 급성장하기 시작했습니다." },
+      { en: "take over", ko: "인계받다, 장악하다", ex: "A new management team will take over operations next month.", koEx: "다음 달부터 새로운 경영진이 전체 운영을 인계받을 예정입니다." },
+      { en: "take on", ko: "책임이나 일을 떠맡다", ex: "Don't take on more responsibilities than you can handle.", koEx: "스스로 감당할 수 있는 것 이상의 과도한 책임을 떠맡지 마세요." },
+      { en: "take apart", ko: "분해하다, 낱낱이 파헤치다", ex: "The engineer took apart the motor to inspect each component.", koEx: "엔지니어는 각 부품을 점검하기 위해 모터를 완전히 분해했습니다." },
+      { en: "take aback", ko: "깜짝 놀라게 하다, 당황하게 하다", ex: "I was taken aback by his blunt and unexpected criticism.", koEx: "그의 거침없고 예상치 못한 비판에 나는 적잖이 당황했습니다." },
+      { en: "come down with", ko: "가벼운 질병에 걸리다", ex: "I think I'm coming down with a mild sore throat.", koEx: "목이 좀 따끔거리는 게 가벼운 감기에 걸리려는 것 같아." },
+      { en: "come along", ko: "함께 가다, 순조롭게 진행되다", ex: "How is your new book project coming along?", koEx: "새로 준비하는 책 출간 프로젝트는 순조롭게 잘 진행되고 있나요?" },
+      { en: "come through", ko: "약속을 지켜내다, 해내다", ex: "When we urgently needed funds, Sarah really came through for us.", koEx: "우리가 자금이 절실히 필요했을 때 사라가 정말 큰 힘이 되어주었습니다." },
+      { en: "give away", ko: "거저 주다, 비밀을 누설하다", ex: "Please don't give away the ending of the mystery novel.", koEx: "그 추리 소설의 결말을 제발 미리 누설하지 마세요." },
+      { en: "bring about", ko: "야기하다, 변화를 초래하다", ex: "Technological innovation will bring about profound societal changes.", koEx: "기술 혁신은 대단히 심오한 사회적 변화를 초래할 것입니다." },
+      { en: "turn down", ko: "거절하다, 소리를 줄이다", ex: "He reluctantly decided to turn down the low job offer.", koEx: "그는 조건이 낮은 입사 제안을 고심 끝에 정중히 거절했습니다." },
+      { en: "turn up", ko: "뜻밖에 나타나다, 음량을 높이다", ex: "My lost keys surprisingly turned up under the car seat.", koEx: "잃어버렸던 내 차 열쇠가 뜻밖에도 자동차 시트 밑에서 나왔어." },
+      { en: "call for", ko: "공개 요구하다, 필요로 하다", ex: "The current economic crisis calls for bold fiscal policy.", koEx: "현재의 경제 위기는 과감한 재정 정책을 절실히 필요로 합니다." },
+      { en: "break into", ko: "침입하다, 새로운 시장에 진출하다", ex: "The fashion brand is attempting to break into overseas markets.", koEx: "그 패션 브랜드는 해외 시장에 본격 진출하기 위해 시도 중입니다." },
+      { en: "break out", ko: "갑자기 발생하다, 탈출하다", ex: "A sudden wildfire broke out in the dry forest yesterday.", koEx: "어제 건조한 숲속에서 갑작스러운 산불이 발생했습니다." },
+      { en: "make up", ko: "화해하다, 지어내다", ex: "They had a minor quarrel yesterday, but they quickly made up.", koEx: "그들은 어제 사소한 말다툼을 벌였지만, 곧바로 화해했습니다." },
+      { en: "make out", ko: "간신히 알아보다, 이해하다", ex: "I could barely make out the distant highway sign through the fog.", koEx: "짙은 안개 속에서 멀리 있는 고속도로 표지판을 간신히 알아볼 수 있었어." },
+      { en: "make sense of", ko: "~을 이해하다, 갈피를 잡다", ex: "I'm trying to make sense of these complex financial charts.", koEx: "나는 이 복잡한 재무 도표들의 갈피를 잡고 이해하려고 애쓰고 있어." },
+      { en: "carry on", ko: "계속해 나가다", ex: "Despite unexpected hurdles, we must carry on with our mission.", koEx: "예상치 못한 난관에도 불구하고 우리는 우리의 사명을 계속 밀고 나가야 합니다." },
+      { en: "fall behind", ko: "뒤처지다, 낙오하다", ex: "He had to study double shifts so he wouldn't fall behind his peers.", koEx: "그는 동료들에게 뒤처지지 않기 위해 두 배로 열심히 공부해야 했습니다." },
+      { en: "fall through", ko: "계획이나 거래가 무산되다", ex: "The real estate transaction unfortunately fell through at the last minute.", koEx: "부동산 거래가 안타깝게도 마지막 순간에 무산되어 버렸습니다." },
+      { en: "fall apart", ko: "산산조각 나다, 무너지다", ex: "Their partnership began to fall apart over money disagreements.", koEx: "금전적 불화로 인해 그들의 파트너십은 서서히 와해되기 시작했습니다." },
+      { en: "hold up", ko: "지연시키다, 버텨내다", ex: "Heavy airport snow held up dozens of international flights.", koEx: "공항의 폭설로 인해 수십 편의 국제선 비행기가 지연되었습니다." },
+      { en: "hold back", ko: "자제하다, 망설이다", ex: "She held back her tears while delivering the emotional farewell speech.", koEx: "그녀는 감동적인 작별 인사를 전하는 동안 눈물을 애써 참았습니다." },
+      { en: "stand up for", ko: "~을 옹호하다, 당당히 맞서다", ex: "Always have the courage to stand up for unfair treatment.", koEx: "부당한 대우에 직면했을 때는 언제나 당당하게 맞서고 옹호할 용기를 가지세요." },
+      { en: "stand by", ko: "대기하다, 곁에서 지지하다", ex: "A loyal partner will stand by you through thick and thin.", koEx: "진정한 동반자는 기쁠 때나 슬플 때나 변함없이 곁에서 지지해 줄 것입니다." },
+      { en: "check up on", ko: "안부를 확인하다, 점검하다", ex: "I called my elderly parents to check up on their health.", koEx: "나는 부모님의 건강 안부를 여쭙고 챙겨드리기 위해 전화를 드렸습니다." },
+      { en: "rule out", ko: "배제하다, 고려에서 제외하다", ex: "Doctors immediately ruled out any serious spinal injury.", koEx: "의사들은 심각한 척추 부상 가능성을 즉시 배제했습니다." },
+      { en: "work out", ko: "일이 잘 풀리다, 운동하다", ex: "Don't stress too much; everything will work out just fine.", koEx: "너무 스트레스받지 마; 모든 일이 결국 다 잘 풀릴 테니까." },
+      { en: "sort out", ko: "문제를 정리하다, 해결하다", ex: "Let's sit down together and sort out the scheduling conflict.", koEx: "우리 함께 마주 앉아서 꼬인 일정 문제를 차분히 정리해 봅시다." },
+      { en: "clear up", ko: "날씨가 개다, 오해를 풀다", ex: "I met with him directly to clear up any misunderstanding.", koEx: "나는 사소한 오해라도 말끔히 풀기 위해 그를 직접 만났습니다." },
+      { en: "show up", ko: "모습을 드러내다, 나타나다", ex: "More than a hundred eager attendees showed up for the tech seminar.", koEx: "백 명이 넘는 열정적인 참가자들이 기술 세미나에 모습을 드러냈습니다." },
+      { en: "burn out", ko: "에너지가 방전되다, 지치다", ex: "Working without breaks will cause you to burn out very quickly.", koEx: "휴식 없이 일만 하다 보면 대단히 빠르게 번아웃이 오고 방전될 것입니다." },
+      { en: "chip in", ko: "각자 조금씩 돈이나 힘을 보태다", ex: "We all chipped in twenty dollars to buy her a retirement gift.", koEx: "우리는 그녀의 퇴직 선물을 사기 위해 다 함께 20달러씩 돈을 모았습니다." },
+      { en: "zone out", ko: "멍때리다, 넋을 놓다", ex: "I was so exhausted during the lecture that I completely zoned out.", koEx: "강의 중에 너무 피곤한 나머지 나도 모르게 완전히 멍을 때리고 말았어." },
+      { en: "freak out", ko: "기겁하다, 패닉에 빠지다", ex: "Don't freak out; it's just a harmless software glitch.", koEx: "기겁하고 놀라지 마; 그건 그냥 해가 없는 단순 소프트웨어 오류일 뿐이야." },
+      { en: "chime in", ko: "대화에 불쑥 끼어들다, 의견을 보태다", ex: "Feel free to chime in whenever you have a constructive idea.", koEx: "건설적인 아이디어가 있을 때는 언제든 대화에 편하게 의견을 보태주세요." },
+      { en: "bail out", ko: "곤경에서 구해내다, 손을 털다", ex: "The government intervened to bail out the regional bank.", koEx: "정부는 그 지방 은행을 위기에서 구제하기 위해 전격 개입했습니다." },
+      { en: "iron out", ko: "원만히 매듭짓다", ex: "We managed to iron out our differences over lunch.", koEx: "우리는 점심을 함께 먹으며 서로의 이견을 원만하게 매듭지었습니다." }
+    ];
+
+    // --- 미국 현지 실생활 회화 관용구 & 핵심 표현 추가 세트 (40개) ---
+    const EXTENDED_AMERICAN_IDIOMS = [
+      { en: "elephant in the room", ko: "모두가 알면서도 꺼리는 껄끄러운 문제", ex: "Let's finally address the elephant in the room regarding the budget.", koEx: "예산과 관련해 모두가 입을 닫고 있는 그 껄끄러운 문제를 이제 정면으로 다룹시다." },
+      { en: "blessing in disguise", ko: "전화위복, 뜻밖의 좋은 일", ex: "Losing that entry-level job proved to be a blessing in disguise.", koEx: "그 초임 일자리를 잃었던 것이 결과적으로는 대단한 전화위복이 되었습니다." },
+      { en: "the ball is in your court", ko: "결정이나 행동할 차례가 상대방에게 있다", ex: "I sent over the revised agreement, so the ball is in your court.", koEx: "수정 합의서를 이미 넘겨드렸으니, 이제 결정은 당신의 손에 달려 있습니다." },
+      { en: "burn bridges", ko: "배수진을 치다, 인간관계를 완전히 끊다", ex: "Even when leaving a job, never burn bridges with former peers.", koEx: "직장을 떠날 때라도 이전 동료들과의 인간관계를 결코 완전히 끊지 마세요." },
+      { en: "once in a blue moon", ko: "극히 드물게, 가뭄에 콩 나듯", ex: "He lives in London, so we only see each other once in a blue moon.", koEx: "그는 런던에 살고 있어서 우리는 아주 극히 드물게나 만납니다." },
+      { en: "speak of the devil", ko: "호랑이도 제 말 하면 온다더니", ex: "Speak of the devil! We were just talking about your promotion.", koEx: "호랑이도 제 말 하면 온다더니! 우리 방금 너의 승진 얘기하고 있었는데." },
+      { en: "beat around the bush", ko: "빙빙 돌려 말하다, 요점을 피하다", ex: "Stop beating around the bush and tell me what really happened.", koEx: "요점을 피해서 빙빙 돌려 말하지 말고, 대체 무슨 일이 있었는지 솔직히 말해줘." },
+      { en: "cold feet", ko: "막판에 드는 두려움이나 망설임", ex: "She got cold feet right before walking up to the public podium.", koEx: "그녀는 대중 연단에 올라서기 직전에 극심한 긴장과 망설임이 들었습니다." },
+      { en: "off the top of my head", ko: "지금 당장 기억나는 바로는", ex: "Off the top of my head, I think our flight departs around 8 AM.", koEx: "지금 당장 생각나는 바로는 우리 비행기가 아침 8시경 출발할 거야." },
+      { en: "face the music", ko: "자신의 잘못에 대해 당당히 대가를 치르다", ex: "He made a mistake on the accounting audit and had to face the music.", koEx: "그는 회계 감사에서 실수를 저질렀고 그에 대한 책임을 당당히 감수해야 했습니다." },
+      { en: "hang in there", ko: "포기하지 않고 끝까지 버티다", ex: "Hang in there; the hardest part of the sprint is almost over.", koEx: "조금만 더 힘내고 버텨봐; 이번 스프린트에서 가장 힘든 고비는 거의 끝났어." },
+      { en: "so far so good", ko: "지금까지는 순조롭다", ex: "We just finished week one of the launch, and so far so good.", koEx: "출시 첫 주가 방금 끝났는데, 지금까지는 아주 순조롭게 잘 굴러가고 있어." },
+      { en: "let the cat out of the bag", ko: "무심코 비밀을 누설하다", ex: "Somebody let the cat out of the bag about the surprise celebration.", koEx: "누군가가 깜짝 축하 파티에 관한 비밀을 무심코 입 밖으로 흘려버렸습니다." },
+      { en: "cross the line", ko: "선을 넘다, 도를 지나치다", ex: "His aggressive personal remarks definitely crossed the line.", koEx: "그의 공격적인 인신공격성 발언은 명백하게 선을 넘은 처사였습니다." },
+      { en: "bark up the wrong tree", ko: "엉뚱한 사람을 짚다, 헛다리짚다", ex: "If you think I leaked that report, you're barking up the wrong tree.", koEx: "내가 그 보고서를 유출했다고 생각한다면, 당신은 완전히 헛다리를 짚은 겁니다." },
+      { en: "learn the ropes", ko: "일의 요령이나 기본기를 터득하다", ex: "It usually takes a few weeks for new hires to learn the ropes.", koEx: "신입 사원들이 일의 기본 요령을 터득하기까지는 보통 몇 주가 걸립니다." },
+      { en: "cutting edge", ko: "최첨단의, 가장 앞서가는", ex: "Our laboratory uses cutting-edge artificial intelligence models.", koEx: "저희 연구소는 최첨단 인공지능 모델들을 적극 도입하여 사용합니다." },
+      { en: "down to earth", ko: "겸손하고 현실적인, 털털한", ex: "Despite his celebrity fame, he remains wonderfully down to earth.", koEx: "엄청난 연예인 인기에도 불구하고, 그는 여전히 대단히 겸손하고 털털합니다." },
+      { en: "long shot", ko: "승산이 희박한 시도, 어려운 도전", ex: "Winning the prestigious national grant is a long shot, but worth trying.", koEx: "권위 있는 국책 지원금을 따내는 것은 승산이 희박하지만, 충분히 도전해 볼 만합니다." },
+      { en: "bottom line", ko: "핵심 요지, 최종 손익", ex: "The bottom line is that we need to improve customer retention.", koEx: "핵심 요지는 우리가 고객 유지율을 반드시 끌어올려야 한다는 점입니다." }
+    ];
+
+    // 미국인 최빈출 어휘·구동사·관용구 3,000개 완충 생성기
     function build3000AmericanWordPool() {
       const pool = [];
       const keys = new Set();
@@ -642,30 +680,30 @@
         return false;
       }
 
-      // 1. 핵심 구동사 기본 등록
+      // 1. 핵심 구동사 풀 (50개) 등록
       CORE_AMERICAN_PHRASAL_VERBS.forEach(item => {
         addUnique(item.en, item.ko, item.ex, item.koEx);
       });
 
-      // 2. 실전 관용구 및 일상 어휘 기본 등록
+      // 2. 확장 구동사 풀 (50개) 등록
+      EXTENDED_AMERICAN_PHRASAL_VERBS.forEach(item => {
+        addUnique(item.en, item.ko, item.ex, item.koEx);
+      });
+
+      // 3. 일상 최빈출 관용구 풀 (40개 + 20개) 등록
       AMERICAN_TOP_COLLOQUIAL_IDIOMS.forEach(item => {
         addUnique(item.en, item.ko, item.ex, item.koEx);
       });
-      AMERICAN_EXPANDED_VOCAB.forEach(item => {
+      EXTENDED_AMERICAN_IDIOMS.forEach(item => {
         addUnique(item.en, item.ko, item.ex, item.koEx);
       });
 
-      // 3. 파워 동사 및 필수 형용사 기본 등록
-      AMERICAN_DAILY_POWER_VERBS.forEach(item => {
-        addUnique(item.v, item.ko, item.ex, item.koEx);
-      });
-      AMERICAN_DAILY_ADJECTIVES.forEach(item => {
-        addUnique(item.adj, item.ko, item.ex, item.koEx);
-      });
+      // 통합 핵심 구동사 마스터 리스트 (총 100개)
+      const ALL_CORE_PVS = [...CORE_AMERICAN_PHRASAL_VERBS, ...EXTENDED_AMERICAN_PHRASAL_VERBS];
 
-      // 4. 미국인 실전 대화 문맥 및 콜로케이션 패턴 정의
+      // 미국 현지 실생활 대화 패턴 및 핵심 연어 (30개 카테고리)
       const CONTEXT_COLLOCATIONS = [
-        { verb: "manage to", koV: "어떻게든 ~해내다" },
+        { verb: "manage to", koV: "어떻게든 용케 ~해내다" },
         { verb: "try to", koV: "~하려고 노력하다" },
         { verb: "need to", koV: "~할 필요가 있다" },
         { verb: "plan to", koV: "~할 계획이다" },
@@ -675,7 +713,7 @@
         { verb: "decide to", koV: "~하기로 결심하다" },
         { verb: "refuse to", koV: "~하기를 거부하다" },
         { verb: "strive to", koV: "~하려고 부단히 애쓰다" },
-        { verb: "struggle to", koV: "~하느라 애를 먹다" },
+        { verb: "struggle to", koV: "~하느라 진땀을 빼다" },
         { verb: "happen to", koV: "우연히 ~하게 되다" },
         { verb: "learn to", koV: "~하는 법을 배우다" },
         { verb: "remember to", koV: "잊지 않고 꼭 ~하다" },
@@ -691,12 +729,13 @@
         { verb: "be bound to", koV: "틀림없이 반드시 ~하게 되다" },
         { verb: "be likely to", koV: "십중팔구 ~할 가능성이 높다" },
         { verb: "be reluctant to", koV: "~하기를 꺼려하다" },
-        { verb: "be determined to", koV: "단단히 벼르고 ~하기로 마음먹다" },
+        { verb: "be determined to", koV: "단단히 마음먹고 ~하다" },
         { verb: "take time to", koV: "시간을 들여 신중히 ~하다" },
         { verb: "help me", koV: "내가 ~하는 것을 돕다" },
         { verb: "encourage us to", koV: "우리가 ~하도록 격려하다" }
       ];
 
+      // 미국 현지 실생활 회화 문맥 프레임
       const CONVERSATION_FRAMES = [
         { lead: "Make sure you", leadKo: "잊지 말고 꼭", trail: "before leaving today", trailKo: "오늘 퇴근하기 전에" },
         { lead: "We really should", leadKo: "우리 정말", trail: "as soon as possible", trailKo: "가능한 한 빨리" },
@@ -715,12 +754,12 @@
         { lead: "I find it helpful to", leadKo: "나는", trail: "every single morning", trailKo: "매일 아침마다 하는 것이 큰 도움이 된다고 생각해요" }
       ];
 
-      // 5. 중첩 조합 1: 구동사(50개) × 콜로케이션(30개) = 1,500개 고유 실전 구문 생성
+      // 4. 구동사 100개 × 실생활 연어 30개 = 3,000개 순수 실전 회화 표현 생성
       let fIdx = 0;
-      for (let i = 0; i < CORE_AMERICAN_PHRASAL_VERBS.length; i++) {
+      for (let i = 0; i < ALL_CORE_PVS.length; i++) {
         for (let j = 0; j < CONTEXT_COLLOCATIONS.length; j++) {
           if (pool.length >= targetCount) break;
-          const pv = CORE_AMERICAN_PHRASAL_VERBS[i];
+          const pv = ALL_CORE_PVS[i];
           const colloc = CONTEXT_COLLOCATIONS[j];
           const frame = CONVERSATION_FRAMES[fIdx % CONVERSATION_FRAMES.length];
 
@@ -735,86 +774,22 @@
         if (pool.length >= targetCount) break;
       }
 
-      // 6. 중첩 조합 2: 실전 파워 동사(15개) × 콜로케이션(30개) = 450개 생성
-      for (let i = 0; i < AMERICAN_DAILY_POWER_VERBS.length; i++) {
-        for (let j = 0; j < CONTEXT_COLLOCATIONS.length; j++) {
-          if (pool.length >= targetCount) break;
-          const mv = AMERICAN_DAILY_POWER_VERBS[i];
+      // 5. 관용구 및 일상 표현 기반 보충 결합 (3,000개 도달 시까지)
+      const ALL_IDIOMS = [...AMERICAN_TOP_COLLOQUIAL_IDIOMS, ...EXTENDED_AMERICAN_IDIOMS];
+      for (let i = 0; i < ALL_IDIOMS.length && pool.length < targetCount; i++) {
+        for (let j = 0; j < CONTEXT_COLLOCATIONS.length && pool.length < targetCount; j++) {
+          const idm = ALL_IDIOMS[i];
           const colloc = CONTEXT_COLLOCATIONS[j];
           const frame = CONVERSATION_FRAMES[fIdx % CONVERSATION_FRAMES.length];
 
-          const naturalPhrase = `${colloc.verb} ${mv.v}`;
-          const phraseMeaning = `${mv.ko} (${colloc.koV})`;
+          const naturalPhrase = `${colloc.verb} ${idm.en}`;
+          const phraseMeaning = `${idm.ko} (${colloc.koV})`;
           const fullEx = `${frame.lead} ${naturalPhrase} ${frame.trail}.`;
-          const fullExKo = `${frame.leadKo} ${mv.ko}하도록 ${colloc.koV} ${frame.trailKo}.`;
+          const fullExKo = `${frame.leadKo} ${idm.ko}할 수 있도록 ${colloc.koV} ${frame.trailKo}.`;
 
           addUnique(naturalPhrase, phraseMeaning, fullEx, fullExKo);
           fIdx++;
         }
-        if (pool.length >= targetCount) break;
-      }
-
-      // 7. 중첩 조합 3: 확장 어휘(20개) × 콜로케이션(30개) = 600개 생성
-      for (let i = 0; i < AMERICAN_EXPANDED_VOCAB.length; i++) {
-        for (let j = 0; j < CONTEXT_COLLOCATIONS.length; j++) {
-          if (pool.length >= targetCount) break;
-          const ev = AMERICAN_EXPANDED_VOCAB[i];
-          const colloc = CONTEXT_COLLOCATIONS[j];
-          const frame = CONVERSATION_FRAMES[fIdx % CONVERSATION_FRAMES.length];
-
-          const naturalPhrase = `${colloc.verb} ${ev.en}`;
-          const phraseMeaning = `${ev.ko} (${colloc.koV})`;
-          const fullEx = `${frame.lead} ${naturalPhrase} ${frame.trail}.`;
-          const fullExKo = `${frame.leadKo} ${ev.ko}할 수 있도록 ${colloc.koV} ${frame.trailKo}.`;
-
-          addUnique(naturalPhrase, phraseMeaning, fullEx, fullExKo);
-          fIdx++;
-        }
-        if (pool.length >= targetCount) break;
-      }
-
-      // 8. 중첩 조합 4: 실전 형용사 조합 (30개 × 15개)으로 3,000개 완전 완충
-      const ADJ_PREDICATES = [
-        { pre: "remain", koP: "여전히 ~한 상태를 유지하다" },
-        { pre: "become increasingly", koP: "점점 더 ~해지다" },
-        { pre: "seem remarkably", koP: "놀라울 정도로 ~해 보이다" },
-        { pre: "prove to be", koP: "결국 ~한 것으로 드러나다" },
-        { pre: "stay", koP: "계속해서 ~함을 유지하다" },
-        { pre: "sound genuinely", koP: "진정으로 ~하게 들리다" },
-        { pre: "make it", koP: "그것을 ~하게 만들다" },
-        { pre: "consider it", koP: "그것을 ~하다고 여기다" }
-      ];
-
-      for (let i = 0; i < AMERICAN_DAILY_ADJECTIVES.length; i++) {
-        for (let j = 0; j < ADJ_PREDICATES.length; j++) {
-          if (pool.length >= targetCount) break;
-          const adj = AMERICAN_DAILY_ADJECTIVES[i];
-          const pred = ADJ_PREDICATES[j];
-          const frame = CONVERSATION_FRAMES[fIdx % CONVERSATION_FRAMES.length];
-
-          const naturalPhrase = `${pred.pre} ${adj.adj}`;
-          const phraseMeaning = `${pred.koP} (${adj.ko})`;
-          const fullEx = `${frame.lead} ${naturalPhrase} ${frame.trail}.`;
-          const fullExKo = `${frame.leadKo} ${adj.ko}하도록 ${pred.koP} ${frame.trailKo}.`;
-
-          addUnique(naturalPhrase, phraseMeaning, fullEx, fullExKo);
-          fIdx++;
-        }
-        if (pool.length >= targetCount) break;
-      }
-
-      // 만약 아직 3,000개에 미달할 경우를 대비한 완전 채움 루프
-      let cycle = 1;
-      while (pool.length < targetCount) {
-        for (let i = 0; i < CORE_AMERICAN_PHRASAL_VERBS.length && pool.length < targetCount; i++) {
-          const pv = CORE_AMERICAN_PHRASAL_VERBS[i];
-          const naturalPhrase = `how to ${pv.en} effectively (${cycle})`;
-          const phraseMeaning = `${pv.ko}를 효과적으로 해내는 법`;
-          const fullEx = `We learned how to ${pv.en} effectively in real situations.`;
-          const fullExKo = `우리는 실전 상황에서 ${pv.ko}를 효과적으로 해내는 방법을 배웠습니다.`;
-          addUnique(naturalPhrase, phraseMeaning, fullEx, fullExKo);
-        }
-        cycle++;
       }
 
       return pool.slice(0, targetCount);
@@ -865,6 +840,80 @@
       "scrutinize": { en: "The bank will scrutinize your financial records thoroughly.", ko: "은행에서 당신의 금융 기록을 철저하게 조사할 것입니다." },
       "vulnerable": { en: "Children are often the most vulnerable during harsh winters.", ko: "혹독한 겨울철에는 아이들이 가장 취약해지기 쉽습니다." }
     };
+
+    // 모바일 네트워크 지연 없이 0초 만에 완벽한 원어민 예문과 1:1 한국어 해석을 반환하는 엔진
+    function getInstantCompanionExample(wordItem) {
+      if (!wordItem) return { en: "-", ko: "-" };
+      const eng = stripVersionTag(wordItem.english || '').trim();
+      const kor = (wordItem.korean || '').trim();
+      const cleanKey = eng.toLowerCase();
+      const sheetEx = (wordItem.example || '').trim().toLowerCase();
+
+      // 1. 직접 큐레이션된 예문 사전 매칭
+      if (DISTINCT_COMPANION_EXAMPLES[cleanKey]) {
+        return DISTINCT_COMPANION_EXAMPLES[cleanKey];
+      }
+
+      // 2. 3,000개 미국인 최빈출 어휘 풀에서 시트 예문과 다른 실전 예문 매칭
+      if (Array.isArray(allDictionaryWords)) {
+        const matched = allDictionaryWords.find(w => 
+          w.english.toLowerCase() === cleanKey && 
+          w.example && w.example.trim().toLowerCase() !== sheetEx
+        );
+        if (matched && matched.example) {
+          return { 
+            en: matched.example, 
+            ko: matched.exampleKo || `${eng}의 실전 회화 활용 예문입니다.` 
+          };
+        }
+      }
+
+      // 3. 100대 핵심 구동사 & 관용구 마스터 리스트 대조
+      const masterList = [
+        ...CORE_AMERICAN_PHRASAL_VERBS, 
+        ...EXTENDED_AMERICAN_PHRASAL_VERBS, 
+        ...AMERICAN_TOP_COLLOQUIAL_IDIOMS, 
+        ...EXTENDED_AMERICAN_IDIOMS
+      ];
+      const masterMatch = masterList.find(m => 
+        m.en.toLowerCase() === cleanKey && 
+        m.ex && m.ex.trim().toLowerCase() !== sheetEx
+      );
+      if (masterMatch) {
+        return { en: masterMatch.ex, ko: masterMatch.koEx };
+      }
+
+      // 4. 모바일에서도 즉시 출력되는 자연스러운 원어민 실전 회화 템플릿
+      const templates = [
+        {
+          en: `I always try to use "${eng}" whenever I talk with native speakers.`,
+          ko: `원어민과 대화할 때마다 "${eng}"(${kor}) 표현을 꼭 쓰려고 노력해요.`
+        },
+        {
+          en: `Could you give me a practical tip on how to use "${eng}" naturally?`,
+          ko: `"${eng}"(${kor}) 표현을 어떻게 하면 자연스럽게 쓸 수 있는지 실전 팁을 알려주실 수 있나요?`
+        },
+        {
+          en: `Mastering "${eng}" will significantly boost your daily conversational skills.`,
+          ko: `"${eng}"(${kor}) 표현을 마스터하면 일상 회화 실력이 눈에 띄게 향상될 것입니다.`
+        },
+        {
+          en: `Many professionals frequently rely on "${eng}" during business discussions.`,
+          ko: `많은 직장인들이 비즈니스 토론 중에 "${eng}"(${kor}) 표현을 아주 자주 활용합니다.`
+        },
+        {
+          en: `It takes a little practice to get comfortable using "${eng}" in real dialogues.`,
+          ko: `실전 대화에서 "${eng}"(${kor}) 표현을 능숙하고 편하게 쓰기까지는 약간의 연습이 필요합니다.`
+        }
+      ];
+
+      for (const t of templates) {
+        if (!sheetEx.includes(t.en.toLowerCase())) {
+          return t;
+        }
+      }
+      return templates[0];
+    }
 
     function generateDistinctFallbackExample(english, existingExample = "") {
       const lowerEx = (existingExample || "").toLowerCase();
@@ -1184,13 +1233,24 @@
       return "";
     }
 
-    // AI 예문 1문장 생성 및 캐싱 (시트 예문과 절대 겹치지 않도록 완벽 분리)
+    // AI 예문 1문장 생성 및 캐싱 (모바일 완전 무결점 보장)
     async function loadCompanionAiExample(wordItem) {
       if (!wordItem || !wordItem.english || wordItem.english === '-') return;
       const cleanKey = wordItem.english.trim().toLowerCase();
       const sheetEx = (wordItem.example || "").trim().toLowerCase();
 
-      // 1. 이미 캐시된 예문이 있고, 시트 예문과 다른지 확인 후 즉시 표시
+      // All 모드인 경우 3,000개 실전 예문과 1:1 한국어 해석이 이미 완비되어 있으므로 즉시 0초 렌더링
+      if (studyMode === 'all' && wordItem.example && wordItem.example !== "등록된 예문이 없습니다.") {
+        const itemData = {
+          en: wordItem.example,
+          ko: wordItem.exampleKo || (wordItem.korean ? `"${wordItem.english}"(${wordItem.korean})의 실전 회화 활용입니다.` : "")
+        };
+        aiExampleCache.set(cleanKey, itemData);
+        displayAiExample(itemData);
+        return;
+      }
+
+      // 1. 이미 캐시된 예문이 있고, 시트 예문과 다른지 확인 후 즉각 표시
       if (aiExampleCache.has(cleanKey)) {
         const cached = aiExampleCache.get(cleanKey);
         if (cached && cached.en && cached.en.trim().toLowerCase() !== sheetEx) {
@@ -1199,24 +1259,18 @@
         }
       }
 
-      // 2. 별도 등록된 큐레이션 회화 예문이 있으면 즉시 표시 (시트 예문 복사 완전 차단)
-      if (DISTINCT_COMPANION_EXAMPLES[cleanKey]) {
-        const curated = DISTINCT_COMPANION_EXAMPLES[cleanKey];
-        aiExampleCache.set(cleanKey, curated);
-        displayAiExample(curated);
+      // 2. 모바일 환경에서 통신 오류나 로딩 멈춤 없이 0초 만에 즉시 고품질 실전 예문 표시
+      const instantData = getInstantCompanionExample(wordItem);
+      aiExampleCache.set(cleanKey, instantData);
+      displayAiExample(instantData);
+
+      // 3. 사용자 설정 Gemini API 키가 있는 경우에만 백그라운드로 추가 실시간 생성 시도
+      if (!customGeminiApiKey) {
         return;
       }
 
-      // 3. 새로 생성 중 표시
-      aiExampleContent.textContent = "원어민 실전 활용 예문 생성 중...";
-      if (aiExampleMeaning) aiExampleMeaning.textContent = "";
-      if (aiExampleMeaningBox) aiExampleMeaningBox.classList.add('hidden');
-      if (toggleAiMeaningText) toggleAiMeaningText.textContent = "해석";
-
       try {
-        const apiKey = "";
-        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
-        
+        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${customGeminiApiKey}`;
         const systemPrompt = "You are an expert American native English coach. Generate exactly ONE highly practical, authentic, and modern sentence that native speakers frequently use in daily life, work, or casual conversation. The generated sentence MUST BE COMPLETELY DIFFERENT from textbook or dictionary sentences. The Korean translation must be a direct, natural, contemporary sentence translation without any meta commentary or parenthetical notes.";
         const userPrompt = `Target Word/Expression: "${wordItem.english}" (Core meaning: "${wordItem.korean}").
 Exclude this existing sentence: "${wordItem.example || ''}".
@@ -1242,44 +1296,27 @@ Create a completely different high-frequency, natural conversational sentence. R
           })
         });
 
-        if (!response.ok) throw new Error("API call failed");
-
-        const result = await response.json();
-        let jsonText = result?.candidates?.[0]?.content?.parts?.[0]?.text;
-        if (jsonText) {
-          jsonText = jsonText.replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/```$/i, '').trim();
-          const parsed = JSON.parse(jsonText);
-          let generatedEn = (parsed.en || parsed.english || "").trim();
-          
-          // 혹시라도 시트 예문과 똑같이 생성되었을 경우 강제 대체
-          if (!generatedEn || generatedEn.toLowerCase() === sheetEx) {
-            generatedEn = generateDistinctFallbackExample(wordItem.english, wordItem.example);
+        if (response.ok) {
+          const result = await response.json();
+          let jsonText = result?.candidates?.[0]?.content?.parts?.[0]?.text;
+          if (jsonText) {
+            jsonText = jsonText.replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/```$/i, '').trim();
+            const parsed = JSON.parse(jsonText);
+            let generatedEn = (parsed.en || parsed.english || "").trim();
+            if (generatedEn && generatedEn.toLowerCase() !== sheetEx) {
+              const freshData = { 
+                en: generatedEn, 
+                ko: (parsed.ko || parsed.korean || "").replace(/\s*\(.*?쓰임새.*?\)\s*/g, '').trim()
+              };
+              aiExampleCache.set(cleanKey, freshData);
+              if (currentActiveItem && currentActiveItem.english.trim().toLowerCase() === cleanKey) {
+                displayAiExample(freshData);
+              }
+            }
           }
-
-          const data = { 
-            en: generatedEn, 
-            ko: (parsed.ko || parsed.korean || "").replace(/\s*\(.*?쓰임새.*?\)\s*/g, '').trim()
-          };
-          if (!data.ko) {
-            data.ko = await translateSentence(data.en);
-          }
-          aiExampleCache.set(cleanKey, data);
-          if (currentActiveItem && currentActiveItem.english.trim().toLowerCase() === cleanKey) {
-            displayAiExample(data);
-          }
-        } else {
-          throw new Error("No candidate returned");
         }
       } catch (e) {
-        const fallbackSentence = generateDistinctFallbackExample(wordItem.english, wordItem.example);
-        const fallback = {
-          en: fallbackSentence,
-          ko: await translateSentence(fallbackSentence)
-        };
-        aiExampleCache.set(cleanKey, fallback);
-        if (currentActiveItem && currentActiveItem.english.trim().toLowerCase() === cleanKey) {
-          displayAiExample(fallback);
-        }
+        // instantData가 이미 정상 표시되어 있으므로 무시
       }
     }
 
@@ -1507,9 +1544,15 @@ Create a completely different high-frequency, natural conversational sentence. R
     function speakCompanionExample() {
       const targetEnglish = currentActiveItem ? currentActiveItem.english : (words[currentIndex]?.english);
       if (!targetEnglish) return;
-      const data = aiExampleCache.get(targetEnglish);
-      if (data && data.en) {
+      const cleanKey = targetEnglish.trim().toLowerCase();
+      const data = aiExampleCache.get(cleanKey);
+      if (data && data.en && data.en !== '-') {
         speakText(data.en, 'en-US');
+      } else {
+        const text = aiExampleContent ? aiExampleContent.textContent.trim() : '';
+        if (text && text !== '-' && !text.includes('생성 중')) {
+          speakText(text, 'en-US');
+        }
       }
     }
 
@@ -1540,39 +1583,58 @@ Create a completely different high-frequency, natural conversational sentence. R
         return;
       }
 
-      filtered.forEach((item) => {
-        const isCurrent = item.originalIndex === currentIndex;
-        const row = document.createElement('div');
-        row.className = `p-2.5 rounded-xl cursor-pointer flex items-center justify-between transition ${isCurrent ? 'bg-red-50 border border-red-200' : 'hover:bg-zinc-50'}`;
-        
-        const displayEng = stripVersionTag(item.english);
+      // 모바일 메모리 부하 방지: 대규모 데이터(3000+) 시 초기 60개 렌더링 후 스크롤 시 점진 로드
+      const CHUNK_SIZE = 60;
+      let renderedCount = 0;
 
-        row.innerHTML = `
-          <div class="flex-1 min-w-0 pr-2">
-            <div class="flex items-center gap-1.5">
-              <span class="text-[10px] font-bold text-zinc-400">#${item.originalIndex + 1}</span>
-              <span class="font-bold text-xs truncate ${isCurrent ? 'text-red-700' : 'text-zinc-900'}">${displayEng}</span>
+      function appendChunk() {
+        const nextBatch = filtered.slice(renderedCount, renderedCount + CHUNK_SIZE);
+        nextBatch.forEach((item) => {
+          const isCurrent = item.originalIndex === currentIndex;
+          const row = document.createElement('div');
+          row.className = `p-2.5 rounded-xl cursor-pointer flex items-center justify-between transition ${isCurrent ? 'bg-red-50 border border-red-200' : 'hover:bg-zinc-50'}`;
+          
+          const displayEng = stripVersionTag(item.english);
+
+          row.innerHTML = `
+            <div class="flex-1 min-w-0 pr-2">
+              <div class="flex items-center gap-1.5">
+                <span class="text-[10px] font-bold text-zinc-400">#${item.originalIndex + 1}</span>
+                <span class="font-bold text-xs truncate ${isCurrent ? 'text-red-700' : 'text-zinc-900'}">${displayEng}</span>
+              </div>
+              <p class="text-[11px] text-zinc-500 truncate mt-0.5">${item.korean}</p>
             </div>
-            <p class="text-[11px] text-zinc-500 truncate mt-0.5">${item.korean}</p>
-          </div>
-          <button class="speak-item-btn w-7 h-7 rounded-lg text-zinc-400 hover:text-red-600 flex items-center justify-center shrink-0" data-word="${displayEng}">
-            <i class="fa-solid fa-volume-high text-[11px]"></i>
-          </button>
-        `;
+            <button class="speak-item-btn w-7 h-7 rounded-lg text-zinc-400 hover:text-red-600 flex items-center justify-center shrink-0" data-word="${displayEng}">
+              <i class="fa-solid fa-volume-high text-[11px]"></i>
+            </button>
+          `;
 
-        row.addEventListener('click', (e) => {
-          if (e.target.closest('.speak-item-btn')) {
-            e.stopPropagation();
-            speakText(item.english, 'en-US');
-            return;
-          }
-          currentIndex = item.originalIndex;
-          renderCard(true);
-          listModal.classList.add('hidden');
+          row.addEventListener('click', (e) => {
+            if (e.target.closest('.speak-item-btn')) {
+              e.stopPropagation();
+              speakText(item.english, 'en-US');
+              return;
+            }
+            currentIndex = item.originalIndex;
+            renderCard(true);
+            listModal.classList.add('hidden');
+          });
+
+          wordListContainer.appendChild(row);
         });
+        renderedCount += nextBatch.length;
+      }
 
-        wordListContainer.appendChild(row);
-      });
+      appendChunk();
+
+      // 스크롤이 끝에 도달하면 다음 단어들을 이어서 표시
+      wordListContainer.onscroll = () => {
+        if (wordListContainer.scrollTop + wordListContainer.clientHeight >= wordListContainer.scrollHeight - 60) {
+          if (renderedCount < filtered.length) {
+            appendChunk();
+          }
+        }
+      };
     }
 
     revealBtn.addEventListener('click', handleRevealOrNext);
@@ -1671,25 +1733,25 @@ Create a completely different high-frequency, natural conversational sentence. R
 
     // Study Mode switchers
     function setStudyMode(mode) {
-      const activeClass = "py-1.5 px-0.5 text-[10px] sm:text-[11px] font-bold rounded-lg transition-all shadow-xs bg-white text-red-600 truncate";
-      const inactiveClass = "py-1.5 px-0.5 text-[10px] sm:text-[11px] font-semibold rounded-lg text-zinc-600 transition-all truncate";
+      const activeClass = "py-1.5 px-0.5 text-[10px] sm:text-[11px] font-bold rounded-lg transition-all shadow-xs bg-white text-red-600 truncate flex items-center justify-center gap-1";
+      const inactiveClass = "py-1.5 px-0.5 text-[10px] sm:text-[11px] font-semibold rounded-lg text-zinc-600 transition-all truncate flex items-center justify-center gap-1";
 
       if (mode === 'all') {
         studyMode = 'all';
-        // 전체 사전 원본 풀과 학습 목록 모두 완벽하게 무작위 셔플 후 첫 단어부터 시작
+        // 전체 사전 원본 풀과 시트 단어까지 빠짐없이 포함하여 완벽 무작위 셔플
         shuffleArray(allDictionaryWords);
         words = [...allDictionaryWords];
         shuffleArray(words);
         currentIndex = 0;
         isRevealed = false;
-        showToast(`미국인 최빈출 3,000 어휘 & 필수 구동사 (${words.length}개) 가동`);
+        showToast(`미국인 최빈출 전체 단어장 (${words.length}개) 가동 완료`);
         fetchMoreDictionaryWords();
       } else if (mode === 'search') {
         openSearch();
         return;
       } else {
         studyMode = mode;
-        if (words !== sheetWords && sheetWords.length > 0) {
+        if (sheetWords && sheetWords.length > 0) {
           words = [...sheetWords];
           shuffleArray(words);
           currentIndex = 0;
@@ -1705,11 +1767,24 @@ Create a completely different high-frequency, natural conversational sentence. R
       renderCard(true);
     }
 
-    if (modeEnToKo) modeEnToKo.addEventListener('click', () => setStudyMode('enToKo'));
-    if (modeKoToEn) modeKoToEn.addEventListener('click', () => setStudyMode('koToEn'));
-    if (modeRandom) modeRandom.addEventListener('click', () => setStudyMode('random'));
-    if (modeAll) modeAll.addEventListener('click', () => setStudyMode('all'));
-    if (modeSearch) modeSearch.addEventListener('click', () => setStudyMode('search'));
+    // 모바일 터치 및 클릭에 확실히 반응하도록 이벤트 바인딩 보강
+    function bindModeButton(btnEl, modeName) {
+      if (!btnEl) return;
+      const handler = (e) => {
+        if (e && e.type === 'touchend') {
+          e.preventDefault();
+        }
+        setStudyMode(modeName);
+      };
+      btnEl.addEventListener('click', handler);
+      btnEl.addEventListener('touchend', handler);
+    }
+
+    bindModeButton(modeRandom, 'random');
+    bindModeButton(modeEnToKo, 'enToKo');
+    bindModeButton(modeKoToEn, 'koToEn');
+    bindModeButton(modeAll, 'all');
+    bindModeButton(modeSearch, 'search');
 
     async function fetchMoreDictionaryWords() {
       // 3,000개 어휘 풀 유지
@@ -2056,21 +2131,16 @@ Create a completely different high-frequency, natural conversational sentence. R
       }
 
       // Fetch or use cached AI native example
-      const cacheKey = item.english;
+      const cacheKey = item.english.trim().toLowerCase();
       if (aiExampleCache.has(cacheKey)) {
         const cached = aiExampleCache.get(cacheKey);
         resultAiExample.textContent = cached.en;
         resultAiMeaning.textContent = cached.ko;
       } else {
-        resultAiExample.textContent = "원어민 실전 빈출 표현 불러오는 중...";
-        resultAiMeaning.textContent = "";
-        loadCompanionAiExample(item).then(() => {
-          const loaded = aiExampleCache.get(cacheKey);
-          if (loaded) {
-            resultAiExample.textContent = loaded.en;
-            resultAiMeaning.textContent = loaded.ko;
-          }
-        });
+        const instant = getInstantCompanionExample(item);
+        aiExampleCache.set(cacheKey, instant);
+        resultAiExample.textContent = instant.en;
+        resultAiMeaning.textContent = instant.ko;
       }
     }
 
@@ -2185,7 +2255,27 @@ Create a completely different high-frequency, natural conversational sentence. R
       try {
         const fetchedWords = await fetchGoogleSheetWords(url);
         sheetWords = fetchedWords;
-        if (studyMode !== 'all') {
+
+        // 시트 단어(22개)도 allDictionaryWords 전체 데이터베이스에 자동 병합 (중복 방지)
+        if (sheetWords && sheetWords.length > 0) {
+          sheetWords.forEach(sw => {
+            const clean = sw.english.trim();
+            if (clean && !allDictionaryWords.some(dw => dw.english.toLowerCase() === clean.toLowerCase())) {
+              allDictionaryWords.unshift({
+                english: clean,
+                korean: sw.korean || '',
+                example: sw.example || '',
+                exampleKo: sw.exampleKo || ''
+              });
+            }
+          });
+        }
+
+        if (studyMode === 'all') {
+          // All 모드 실행 중일 때는 시트 단어가 추가된 3,000+개 전체 풀 유지
+          words = [...allDictionaryWords];
+          renderCard(false);
+        } else {
           words = sheetWords;
           shuffleArray(words);
           currentIndex = 0;
