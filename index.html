@@ -2,20 +2,20 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>스마트 영단어 학습기 (Google Sheet 연동)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>스마트 영단어 학습기</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+KR:wght@400;500;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   
   <script>
     tailwind.config = {
       theme: {
         extend: {
           fontFamily: {
-            sans: ['Inter', 'Noto Sans KR', 'sans-serif'],
+            sans: ['Pretendard', 'Inter', '-apple-system', 'BlinkMacSystemFont', 'system-ui', 'sans-serif'],
           },
           colors: {
             brand: {
@@ -33,249 +33,278 @@
   </script>
 
   <style>
-    body {
-      font-family: 'Inter', 'Noto Sans KR', sans-serif;
-      background: radial-gradient(circle at 10% 20%, #f4f4f5 0%, #e4e4e7 100%);
+    * {
+      -webkit-tap-highlight-color: transparent;
+      box-sizing: border-box;
+    }
+    html, body {
+      overscroll-behavior-y: none;
+      font-family: 'Pretendard', 'Inter', sans-serif;
+      background-color: #f4f4f5;
       min-height: 100vh;
+      min-height: 100dvh;
     }
-    .card-shadow {
-      box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.08), 0 0 2px 1px rgba(0, 0, 0, 0.02);
+    
+    /* 모바일 글자 이중 렌더링/잔상 방지 */
+    .no-subpixel-conflict {
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      text-rendering: optimizeLegibility;
+      isolation: isolate;
+      word-break: keep-all;
+      overflow-wrap: break-word;
     }
-    .perspective-1000 {
-      perspective: 1000px;
+
+    .safe-bottom {
+      padding-bottom: env(safe-area-inset-bottom, 12px);
     }
-    .reveal-anim {
-      animation: revealUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+
+    /* 부드러운 전환 효과 (오버랩 방지) */
+    .fade-in {
+      animation: smoothFade 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
     }
-    @keyframes revealUp {
+    @keyframes smoothFade {
       from {
         opacity: 0;
-        transform: translateY(12px) scale(0.98);
+        transform: translateY(6px);
       }
       to {
         opacity: 1;
-        transform: translateY(0) scale(1);
+        transform: translateY(0);
       }
+    }
+
+    /* 모바일 스크롤바 감추기 */
+    .hide-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .hide-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
     }
   </style>
 </head>
-<body class="text-zinc-800 antialiased flex flex-col min-h-screen">
+<body class="text-zinc-800 antialiased flex flex-col min-h-[100dvh] justify-between">
 
-  <header class="w-full bg-white/85 backdrop-blur-md border-b border-zinc-200 sticky top-0 z-30">
-    <div class="max-w-4xl mx-auto px-4 py-3 sm:px-6 flex items-center justify-between">
-      <div class="flex items-center space-x-3">
-        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-red-600 to-rose-600 flex items-center justify-center text-white shadow-md shadow-red-500/20">
-          <i class="fa-solid fa-graduation-cap text-lg"></i>
+  <!-- Mobile Optimized Header -->
+  <header class="w-full bg-white/95 backdrop-blur-md border-b border-zinc-200 sticky top-0 z-30 px-3 py-2.5">
+    <div class="max-w-md mx-auto flex items-center justify-between">
+      <div class="flex items-center space-x-2.5 min-w-0">
+        <div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-red-600 to-rose-600 flex items-center justify-center text-white shadow-sm shrink-0">
+          <i class="fa-solid fa-graduation-cap text-sm"></i>
         </div>
-        <div>
-          <h1 class="text-lg font-bold text-zinc-900 tracking-tight">WordMaster Live</h1>
-          <p class="text-xs text-zinc-500 font-medium flex items-center gap-1.5">
-            <span id="syncStatusDot" class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
-            <span id="syncStatusText">구글 시트 연결 중...</span>
+        <div class="min-w-0">
+          <h1 class="text-sm font-extrabold text-zinc-900 tracking-tight leading-none">WordMaster</h1>
+          <p class="text-[10px] text-zinc-500 font-medium flex items-center gap-1 mt-0.5 truncate">
+            <span id="syncStatusDot" class="w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0"></span>
+            <span id="syncStatusText" class="truncate">시트 연동 중...</span>
           </p>
         </div>
       </div>
 
-      <div class="flex items-center gap-2">
-        <button id="syncNowBtn" title="구글 시트 즉시 동기화" class="p-2.5 rounded-lg border border-red-200 bg-red-50/70 hover:bg-red-100 text-red-700 transition flex items-center gap-1.5 text-xs font-semibold shadow-xs">
-          <i id="syncNowIcon" class="fa-solid fa-arrows-rotate"></i>
-          <span class="hidden sm:inline">동기화</span>
+      <!-- Action Quick Bar -->
+      <div class="flex items-center gap-1.5 shrink-0">
+        <button id="syncNowBtn" title="시트 동기화" class="w-8 h-8 rounded-lg border border-red-200 bg-red-50 text-red-600 flex items-center justify-center active:scale-95 transition">
+          <i id="syncNowIcon" class="fa-solid fa-arrows-rotate text-xs"></i>
         </button>
-        <button id="openSheetBtn" title="구글 시트 열기" class="p-2.5 rounded-lg border border-zinc-200 hover:bg-zinc-100 text-zinc-600 transition flex items-center gap-1.5 text-xs font-semibold">
-          <i class="fa-solid fa-table-cells text-emerald-600"></i>
-          <span class="hidden sm:inline">원본 시트</span>
+        <button id="toggleListBtn" title="목록" class="px-2 h-8 rounded-lg border border-zinc-200 bg-white text-zinc-700 flex items-center gap-1 text-xs font-semibold active:scale-95 transition">
+          <i class="fa-solid fa-list-ul text-[11px] text-zinc-500"></i>
+          <span id="totalWordCountBadge" class="text-[11px]">0</span>
         </button>
-        <button id="configBtn" title="시트 설정" class="p-2.5 rounded-lg border border-zinc-200 hover:bg-zinc-100 text-zinc-600 transition flex items-center gap-1.5 text-xs font-semibold">
-          <i class="fa-solid fa-gear"></i>
-          <span class="hidden sm:inline">연동 설정</span>
+        <button id="configBtn" title="설정" class="w-8 h-8 rounded-lg border border-zinc-200 bg-white text-zinc-600 flex items-center justify-center active:scale-95 transition">
+          <i class="fa-solid fa-gear text-xs"></i>
         </button>
       </div>
     </div>
   </header>
 
-  <main class="flex-1 max-w-3xl w-full mx-auto px-4 py-6 sm:py-8 flex flex-col justify-center">
+  <!-- Mobile Main Container -->
+  <main class="flex-1 max-w-md w-full mx-auto px-3.5 py-3 flex flex-col justify-start">
 
-    <!-- Mode Selector & Progress Bar -->
-    <div class="mb-5 bg-white/80 backdrop-blur border border-zinc-200/90 p-3 sm:p-4 rounded-2xl shadow-sm">
-      <div class="flex flex-col sm:flex-row items-center justify-between gap-3 mb-3">
-        <!-- Study Mode Selector -->
-        <div class="inline-flex p-1 bg-zinc-100 rounded-xl w-full sm:w-auto" role="group">
-          <button id="modeRandom" class="flex-1 sm:flex-none px-3.5 py-1.5 text-xs font-bold rounded-lg transition-all shadow-sm bg-white text-red-600">
-            <i class="fa-solid fa-shuffle mr-1"></i> 랜덤 (A or B)
-          </button>
-          <button id="modeEnToKo" class="flex-1 sm:flex-none px-3.5 py-1.5 text-xs font-semibold rounded-lg text-zinc-600 hover:text-zinc-900 transition-all">
-            <i class="fa-solid fa-font mr-1"></i> 영어 → 해석
-          </button>
-          <button id="modeKoToEn" class="flex-1 sm:flex-none px-3.5 py-1.5 text-xs font-semibold rounded-lg text-zinc-600 hover:text-zinc-900 transition-all">
-            <i class="fa-solid fa-language mr-1"></i> 해석 → 영어
-          </button>
-        </div>
-
-        <!-- Controls: Shuffle & Sound toggle -->
-        <div class="flex items-center gap-2 w-full sm:w-auto justify-end">
-          <button id="shuffleBtn" class="px-3 py-1.5 rounded-lg border border-zinc-200 bg-white hover:bg-zinc-100 text-xs font-semibold text-zinc-700 transition flex items-center gap-1.5" title="단어 순서 섞기">
-            <i class="fa-solid fa-dice text-zinc-500"></i>
-            <span>랜덤 섞기</span>
-          </button>
-          <button id="toggleListBtn" class="px-3 py-1.5 rounded-lg border border-zinc-200 bg-white hover:bg-zinc-100 text-xs font-semibold text-zinc-700 transition flex items-center gap-1.5" title="전체 단어 목록">
-            <i class="fa-solid fa-list-check text-zinc-500"></i>
-            <span>목록 (<span id="totalWordCountBadge">0</span>)</span>
-          </button>
-        </div>
+    <!-- Top Mode Selector & Progress -->
+    <div class="mb-3 space-y-2">
+      <!-- Mode Tabs (Scrollable on small devices) -->
+      <div class="grid grid-cols-3 gap-1 bg-zinc-200/80 p-1 rounded-xl text-center">
+        <button id="modeRandom" class="py-1.5 text-[11px] font-bold rounded-lg transition-all shadow-xs bg-white text-red-600">
+          <i class="fa-solid fa-shuffle mr-0.5"></i> 랜덤
+        </button>
+        <button id="modeEnToKo" class="py-1.5 text-[11px] font-semibold rounded-lg text-zinc-600 transition-all">
+          영어→해석
+        </button>
+        <button id="modeKoToEn" class="py-1.5 text-[11px] font-semibold rounded-lg text-zinc-600 transition-all">
+          해석→영어
+        </button>
       </div>
 
-      <!-- Progress bar -->
-      <div>
-        <div class="flex justify-between items-center text-xs font-medium text-zinc-500 mb-1.5">
-          <span>학습 진행도</span>
-          <span id="progressText" class="font-bold text-red-600">0 / 0</span>
+      <!-- Compact Progress & Shuffle Button -->
+      <div class="flex items-center justify-between gap-2 px-1">
+        <div class="flex-1">
+          <div class="flex justify-between items-center text-[11px] font-medium text-zinc-500 mb-1">
+            <span>진행도</span>
+            <span id="progressText" class="font-bold text-red-600 text-[11px]">0 / 0</span>
+          </div>
+          <div class="w-full bg-zinc-200 rounded-full h-1.5 overflow-hidden">
+            <div id="progressBar" class="bg-gradient-to-r from-red-500 to-rose-600 h-1.5 rounded-full transition-all duration-300 w-0"></div>
+          </div>
         </div>
-        <div class="w-full bg-zinc-200 rounded-full h-2 overflow-hidden">
-          <div id="progressBar" class="bg-gradient-to-r from-red-500 to-rose-600 h-2 rounded-full transition-all duration-300 w-0"></div>
-        </div>
+        <button id="shuffleBtn" class="shrink-0 text-[11px] font-semibold px-2 py-1 bg-white border border-zinc-200 rounded-lg text-zinc-600 active:scale-95 transition flex items-center gap-1 shadow-2xs">
+          <i class="fa-solid fa-dice text-zinc-400"></i>
+          <span>셔플</span>
+        </button>
       </div>
     </div>
 
-    <div id="flashcard" class="bg-white rounded-3xl border border-zinc-200 card-shadow overflow-hidden flex flex-col min-h-[380px] sm:min-h-[420px] transition-all">
+    <!-- Flashcard Container -->
+    <div id="flashcard" class="bg-white rounded-2xl border border-zinc-200 shadow-sm flex flex-col min-h-[350px] relative overflow-hidden">
       
-      <!-- Card Question Area -->
-      <div class="px-6 py-8 sm:py-10 flex-1 flex flex-col justify-center items-center text-center">
-        <div class="max-w-xl">
+      <!-- Top Question Area -->
+      <div class="p-5 flex-1 flex flex-col justify-center items-center text-center no-subpixel-conflict">
+        <div class="w-full">
           <div class="flex items-center justify-center gap-1.5 mb-2">
-            <span id="promptLabel" class="text-xs font-semibold text-zinc-400 uppercase tracking-widest block">Word / Expression</span>
-            <button id="speakPromptBtn" class="p-1 px-1.5 rounded-md text-zinc-400 hover:text-red-600 hover:bg-zinc-100 transition active:scale-95" title="발음 듣기">
-              <i class="fa-solid fa-volume-high text-xs"></i>
+            <span id="promptLabel" class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider block">Word / Expression</span>
+            <button id="speakPromptBtn" class="w-6 h-6 rounded-full bg-zinc-100 text-zinc-600 hover:text-red-600 flex items-center justify-center active:scale-90 transition" title="발음 듣기">
+              <i class="fa-solid fa-volume-high text-[11px]"></i>
             </button>
           </div>
-          <div id="promptContent" class="text-3xl sm:text-4xl md:text-5xl font-black text-zinc-900 tracking-tight leading-tight mb-2">
-            Loading...
+          
+          <!-- Large Prompt Text (Single clear layer to eliminate ghosting) -->
+          <div id="promptContent" class="text-2xl sm:text-3xl font-extrabold text-zinc-900 tracking-tight leading-snug py-1">
+            -
           </div>
         </div>
 
-        <!-- Answer & Example Reveal Section -->
-        <div id="answerSection" class="w-full mt-6 pt-6 border-t border-dashed border-zinc-200 hidden">
-          <!-- Hidden Revealed Translation/Word -->
-          <div class="mb-4 reveal-anim flex items-center justify-center gap-2">
-            <div id="answerContent" class="text-2xl sm:text-3xl font-extrabold text-red-600">
+        <!-- Answer Section (Hidden until revealed) -->
+        <div id="answerSection" class="w-full mt-4 pt-4 border-t border-dashed border-zinc-200 hidden fade-in">
+          <!-- Revealed Target Word -->
+          <div class="flex items-center justify-center gap-2 mb-3">
+            <div id="answerContent" class="text-xl sm:text-2xl font-black text-red-600 leading-tight">
               -
             </div>
-            <button id="speakAnswerBtn" class="p-1 rounded-md hover:bg-red-50 text-red-600 transition hidden" title="정답 영어 발음 듣기">
-              <i class="fa-solid fa-volume-high text-xs"></i>
+            <button id="speakAnswerBtn" class="w-6 h-6 rounded-full bg-red-50 text-red-600 hover:bg-red-100 flex items-center justify-center active:scale-90 transition hidden" title="정답 영어 발음 듣기">
+              <i class="fa-solid fa-volume-high text-[11px]"></i>
             </button>
           </div>
 
-          <!-- Hidden Revealed Example -->
-          <div id="exampleBox" class="bg-zinc-50 border border-zinc-200/90 rounded-2xl p-4 text-left reveal-anim mt-3">
-            <div class="flex items-center justify-between text-xs font-bold text-zinc-500 mb-1.5">
-              <span class="flex items-center gap-1.5">
-                <i class="fa-solid fa-quote-left text-red-500"></i>
-                예문 (Example)
+          <!-- Original Example Box -->
+          <div id="exampleBox" class="bg-zinc-50 border border-zinc-200 rounded-xl p-3 text-left mb-2">
+            <div class="flex items-center justify-between text-[11px] font-bold text-zinc-500 mb-1">
+              <span class="flex items-center gap-1 text-zinc-600">
+                <i class="fa-solid fa-quote-left text-red-500 text-[10px]"></i>
+                시트 예문
               </span>
-              <button id="speakExampleBtn" class="text-zinc-400 hover:text-red-600 transition" title="예문 발음 듣기 (E)">
-                <i class="fa-solid fa-volume-low text-xs"></i>
+              <button id="speakExampleBtn" class="w-5 h-5 rounded-full hover:bg-zinc-200 text-zinc-500 flex items-center justify-center transition" title="예문 발음 듣기">
+                <i class="fa-solid fa-volume-low text-[10px]"></i>
               </button>
             </div>
-            <p id="exampleContent" class="text-sm sm:text-base font-medium text-zinc-700 leading-relaxed italic">
+            <p id="exampleContent" class="text-xs sm:text-sm font-medium text-zinc-700 leading-relaxed italic">
+              -
+            </p>
+          </div>
+
+          <!-- AI Companion Generated Example Box -->
+          <div id="aiExampleBox" class="bg-rose-50/50 border border-rose-100 rounded-xl p-3 text-left">
+            <div class="flex items-center justify-between text-[11px] font-bold text-red-700 mb-1">
+              <span class="flex items-center gap-1">
+                <i class="fa-solid fa-wand-magic-sparkles text-red-500 text-[10px]"></i>
+                추가 추천 예문
+              </span>
+              <button id="speakAiExampleBtn" class="w-5 h-5 rounded-full hover:bg-rose-100 text-red-600 flex items-center justify-center transition" title="추가 예문 발음">
+                <i class="fa-solid fa-volume-low text-[10px]"></i>
+              </button>
+            </div>
+            <p id="aiExampleContent" class="text-xs sm:text-sm font-medium text-zinc-800 leading-relaxed">
+              -
+            </p>
+            <p id="aiExampleMeaning" class="text-[11px] text-zinc-500 mt-1 font-normal">
               -
             </p>
           </div>
         </div>
       </div>
 
-      <!-- Action Buttons Row -->
-      <div class="px-6 py-4 bg-zinc-50 border-t border-zinc-100 flex items-center justify-between gap-3">
-        <button id="prevBtn" class="px-4 py-2.5 rounded-xl border border-zinc-200 bg-white hover:bg-zinc-100 text-zinc-700 text-xs sm:text-sm font-semibold transition active:scale-95 flex items-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed">
+      <!-- Action Buttons Row (Touch Friendly) -->
+      <div class="px-4 py-3 bg-zinc-50 border-t border-zinc-100 flex items-center gap-2">
+        <button id="prevBtn" class="h-11 px-3.5 rounded-xl border border-zinc-200 bg-white hover:bg-zinc-100 text-zinc-700 text-xs font-bold active:scale-95 transition flex items-center justify-center disabled:opacity-30 disabled:pointer-events-none">
           <i class="fa-solid fa-chevron-left"></i>
-          <span>이전</span>
         </button>
 
-        <!-- Center Confirm/Next Key Action -->
-        <button id="revealBtn" class="flex-1 max-w-xs py-3 px-6 rounded-xl bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700 text-white font-bold text-sm sm:text-base shadow-lg shadow-red-500/25 active:scale-95 transition-all flex items-center justify-center gap-2">
-          <i id="revealBtnIcon" class="fa-solid fa-eye"></i>
-          <span id="revealBtnText">정답 확인하기</span>
+        <button id="revealBtn" class="flex-1 h-11 px-4 rounded-xl bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 text-white font-bold text-sm shadow-md shadow-red-500/20 active:scale-98 transition flex items-center justify-center gap-1.5">
+          <i id="revealBtnIcon" class="fa-solid fa-eye text-xs"></i>
+          <span id="revealBtnText">정답 & 예문 확인</span>
         </button>
 
-        <button id="nextBtn" class="px-4 py-2.5 rounded-xl border border-zinc-200 bg-white hover:bg-zinc-100 text-zinc-700 text-xs sm:text-sm font-semibold transition active:scale-95 flex items-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed">
-          <span>다음</span>
+        <button id="nextBtn" class="h-11 px-3.5 rounded-xl border border-zinc-200 bg-white hover:bg-zinc-100 text-zinc-700 text-xs font-bold active:scale-95 transition flex items-center justify-center disabled:opacity-30 disabled:pointer-events-none">
           <i class="fa-solid fa-chevron-right"></i>
         </button>
       </div>
     </div>
   </main>
 
-  <div id="listModal" class="fixed inset-0 bg-zinc-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
-    <div class="bg-white rounded-3xl w-full max-w-2xl max-h-[85vh] flex flex-col shadow-2xl border border-zinc-200 overflow-hidden">
-      <div class="px-6 py-4 border-b border-zinc-100 flex items-center justify-between">
+  <!-- Word List Modal (Mobile Bottom Sheet Style) -->
+  <div id="listModal" class="fixed inset-0 bg-zinc-900/60 backdrop-blur-xs z-50 flex flex-col justify-end sm:justify-center items-center p-0 sm:p-4 hidden">
+    <div class="bg-white rounded-t-3xl sm:rounded-2xl w-full max-w-md max-h-[85vh] flex flex-col shadow-2xl overflow-hidden animate-in slide-in-from-bottom duration-200">
+      <div class="px-4 py-3.5 border-b border-zinc-100 flex items-center justify-between">
         <div>
-          <h2 class="text-base font-bold text-zinc-900">시트 전체 단어 목록</h2>
-          <p class="text-xs text-zinc-500">클릭하면 해당 단어로 바로 이동합니다.</p>
+          <h2 class="text-sm font-bold text-zinc-900">전체 단어 목록</h2>
+          <p class="text-[11px] text-zinc-500">터치하여 원하는 단어로 이동</p>
         </div>
-        <button id="closeListBtn" class="w-8 h-8 rounded-full hover:bg-zinc-100 text-zinc-400 hover:text-zinc-700 flex items-center justify-center transition">
-          <i class="fa-solid fa-xmark text-lg"></i>
+        <button id="closeListBtn" class="w-8 h-8 rounded-full bg-zinc-100 text-zinc-500 flex items-center justify-center">
+          <i class="fa-solid fa-xmark text-sm"></i>
         </button>
       </div>
 
-      <!-- Search in Modal -->
-      <div class="p-4 border-b border-zinc-100 bg-zinc-50/50">
+      <div class="p-3 border-b border-zinc-100 bg-zinc-50">
         <div class="relative">
-          <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-400 text-xs"></i>
-          <input type="text" id="searchInput" placeholder="영어 또는 한글 해석 검색..." class="w-full pl-9 pr-4 py-2 text-xs sm:text-sm bg-white border border-zinc-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500">
+          <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 text-xs"></i>
+          <input type="text" id="searchInput" placeholder="단어 또는 해석 검색..." class="w-full pl-8 pr-3 py-2 text-xs bg-white border border-zinc-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-red-500">
         </div>
       </div>
 
-      <!-- Word items container -->
-      <div id="wordListContainer" class="flex-1 overflow-y-auto p-4 divide-y divide-zinc-100">
+      <div id="wordListContainer" class="flex-1 overflow-y-auto p-3 divide-y divide-zinc-100 hide-scrollbar">
         <!-- populated dynamically -->
       </div>
     </div>
   </div>
 
-  <div id="settingsModal" class="fixed inset-0 bg-zinc-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
-    <div class="bg-white rounded-3xl w-full max-w-lg shadow-2xl border border-zinc-200 p-6 overflow-hidden">
-      <div class="flex items-center justify-between mb-4">
-        <h2 class="text-base font-bold text-zinc-900 flex items-center gap-2">
+  <!-- Settings Modal -->
+  <div id="settingsModal" class="fixed inset-0 bg-zinc-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-2xl w-full max-w-sm shadow-2xl border border-zinc-200 p-5">
+      <div class="flex items-center justify-between mb-3">
+        <h2 class="text-sm font-bold text-zinc-900 flex items-center gap-1.5">
           <i class="fa-solid fa-sliders text-red-600"></i>
           구글 시트 연동 설정
         </h2>
-        <button id="closeSettingsBtn" class="w-8 h-8 rounded-full hover:bg-zinc-100 text-zinc-400 hover:text-zinc-700 flex items-center justify-center transition">
-          <i class="fa-solid fa-xmark text-lg"></i>
+        <button id="closeSettingsBtn" class="w-7 h-7 rounded-full bg-zinc-100 text-zinc-500 flex items-center justify-center">
+          <i class="fa-solid fa-xmark text-xs"></i>
         </button>
       </div>
 
-      <p class="text-xs text-zinc-500 mb-4 leading-relaxed">
-        구글 스프레드시트의 <b>공유 설정</b>이 <code>"링크가 있는 모든 사용자 - 뷰어"</code>로 공개되어 있어야 실시간으로 데이터를 불러올 수 있습니다.
-      </p>
-
-      <div class="space-y-3 mb-6">
+      <div class="space-y-3 mb-4">
         <div>
-          <label class="block text-xs font-semibold text-zinc-700 mb-1">구글 시트 URL</label>
-          <input type="url" id="sheetUrlInput" class="w-full px-3.5 py-2 text-xs bg-zinc-50 border border-zinc-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-red-500 font-mono" placeholder="https://docs.google.com/spreadsheets/d/.../edit#gid=0">
+          <label class="block text-[11px] font-bold text-zinc-700 mb-1">스프레드시트 주소</label>
+          <input type="url" id="sheetUrlInput" class="w-full px-3 py-2 text-xs bg-zinc-50 border border-zinc-200 rounded-xl focus:bg-white focus:outline-none focus:ring-1 focus:ring-red-500 font-mono" placeholder="https://docs.google.com/...">
         </div>
-        <div class="bg-zinc-100 border border-zinc-200 p-3 rounded-xl text-[11px] text-zinc-700">
-          <p class="font-bold mb-1 text-zinc-800"><i class="fa-solid fa-circle-info mr-1 text-red-600"></i>컬럼 배치 규격</p>
-          <ul class="list-disc list-inside space-y-0.5 text-zinc-600">
-            <li><b>A컬럼:</b> 영어 단어 / 문장</li>
-            <li><b>B컬럼:</b> 한국어 해석</li>
-            <li><b>C컬럼:</b> 예문 (Example)</li>
-          </ul>
+        <div class="bg-zinc-100 p-2.5 rounded-xl text-[11px] text-zinc-600">
+          <p class="font-bold text-zinc-800 mb-0.5">시트 컬럼 기준</p>
+          <p>A: 영어 / B: 한국어 해석 / C: 예문</p>
         </div>
       </div>
 
       <div class="flex justify-end gap-2">
-        <button id="resetSampleBtn" class="px-4 py-2 rounded-xl border border-zinc-200 text-xs font-semibold text-zinc-600 hover:bg-zinc-50 transition">
-          기본값 복원
+        <button id="resetSampleBtn" class="px-3 py-1.5 rounded-xl border border-zinc-200 text-xs font-semibold text-zinc-600">
+          기본값
         </button>
-        <button id="saveSheetUrlBtn" class="px-5 py-2 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-bold transition shadow-md shadow-red-500/20">
-          연동 & 불러오기
+        <button id="saveSheetUrlBtn" class="px-4 py-1.5 rounded-xl bg-red-600 text-white text-xs font-bold shadow-sm">
+          연동하기
         </button>
       </div>
     </div>
   </div>
 
-  <!-- Notification Toast message -->
-  <div id="toast" class="fixed bottom-6 left-1/2 -translate-x-1/2 px-4 py-2.5 bg-zinc-900/90 text-white text-xs font-medium rounded-full shadow-lg transition-all duration-300 opacity-0 pointer-events-none z-50 flex items-center gap-2">
-    <i id="toastIcon" class="fa-solid fa-check text-red-400"></i>
-    <span id="toastMsg">알림 메시지</span>
+  <!-- Toast Notification -->
+  <div id="toast" class="fixed bottom-6 left-1/2 -translate-x-1/2 px-4 py-2 bg-zinc-900/90 text-white text-xs font-semibold rounded-full shadow-lg transition-all duration-300 opacity-0 pointer-events-none z-50 flex items-center gap-1.5 max-w-[90vw] text-center">
+    <i id="toastIcon" class="fa-solid fa-check text-red-400 text-xs"></i>
+    <span id="toastMsg" class="truncate">알림 메시지</span>
   </div>
 
   <script>
@@ -283,7 +312,6 @@
     const DEFAULT_SHEET_URL = "https://docs.google.com/spreadsheets/d/1ScdDH5qBNRQHwZt7_Ib1aWBslTwiWnI6Cbj63PKVY4A/edit?gid=0#gid=0";
     let currentSheetUrl = DEFAULT_SHEET_URL;
 
-    // Built-in fallback sample dataset in case user's sheet is not shared as public yet
     const FALLBACK_WORDS = [
       { english: "meticulous", korean: "세심한, 꼼꼼한", example: "He was meticulous about keeping his desk tidy." },
       { english: "resilience", korean: "회복력, 탄력성", example: "The team showed great resilience in overcoming defeat." },
@@ -298,23 +326,24 @@
     let words = [...FALLBACK_WORDS];
     let currentIndex = 0;
     let isRevealed = false;
-    let studyMode = 'random'; // Default to random presentation (A or B column randomly chosen)
-    let currentCardMode = 'enToKo'; // randomly decided per card
-    let bookmarkedIndices = new Set();
+    let studyMode = 'random';
+    let currentCardMode = 'enToKo';
+    const aiExampleCache = new Map();
 
     // DOM Elements
     const promptLabel = document.getElementById('promptLabel');
     const promptContent = document.getElementById('promptContent');
-    const promptSub = document.getElementById('promptSub');
     const speakPromptBtn = document.getElementById('speakPromptBtn');
     const answerSection = document.getElementById('answerSection');
     const answerContent = document.getElementById('answerContent');
-    const exampleBox = document.getElementById('exampleBox');
     const exampleContent = document.getElementById('exampleContent');
-    const badgeLabel = document.getElementById('badgeLabel');
-    const badgeIconContainer = document.getElementById('badgeIconContainer');
-    const sheetRowBadge = document.getElementById('sheetRowBadge');
-    const questionTypeBadge = document.getElementById('questionTypeBadge');
+    const speakAnswerBtn = document.getElementById('speakAnswerBtn');
+    const speakExampleBtn = document.getElementById('speakExampleBtn');
+
+    const aiExampleBox = document.getElementById('aiExampleBox');
+    const aiExampleContent = document.getElementById('aiExampleContent');
+    const aiExampleMeaning = document.getElementById('aiExampleMeaning');
+    const speakAiExampleBtn = document.getElementById('speakAiExampleBtn');
 
     const revealBtn = document.getElementById('revealBtn');
     const revealBtnIcon = document.getElementById('revealBtnIcon');
@@ -322,11 +351,6 @@
     const prevBtn = document.getElementById('prevBtn');
     const nextBtn = document.getElementById('nextBtn');
     const shuffleBtn = document.getElementById('shuffleBtn');
-    const bookmarkBtn = document.getElementById('bookmarkBtn');
-    const speakBtn = document.getElementById('speakBtn');
-    const speakBtnIcon = document.getElementById('speakBtnIcon');
-    const speakAnswerBtn = document.getElementById('speakAnswerBtn');
-    const speakExampleBtn = document.getElementById('speakExampleBtn');
 
     const progressBar = document.getElementById('progressBar');
     const progressText = document.getElementById('progressText');
@@ -350,13 +374,9 @@
     const sheetUrlInput = document.getElementById('sheetUrlInput');
     const saveSheetUrlBtn = document.getElementById('saveSheetUrlBtn');
     const resetSampleBtn = document.getElementById('resetSampleBtn');
-    const openSheetBtn = document.getElementById('openSheetBtn');
     const syncNowBtn = document.getElementById('syncNowBtn');
     const syncNowIcon = document.getElementById('syncNowIcon');
 
-    /**
-     * Extracts Sheet ID and GID from given Google Sheet URL
-     */
     function parseGoogleSheetUrl(url) {
       try {
         const idMatch = url.match(/\/d\/([a-zA-Z0-9-_]+)/);
@@ -369,9 +389,6 @@
       }
     }
 
-    /**
-     * Parse raw CSV text safely handling quotes, commas, and newlines
-     */
     function parseCSV(text) {
       const rows = [];
       let currentRow = [];
@@ -415,26 +432,20 @@
       return rows;
     }
 
-    /**
-     * Fetches words from Google Sheet export endpoint
-     */
     async function fetchGoogleSheetWords(url) {
-      updateSyncStatus("loading", "시트 데이터 불러오는 중...");
+      updateSyncStatus("loading", "시트 불러오는 중...");
       const { sheetId, gid } = parseGoogleSheetUrl(url);
 
       if (!sheetId) {
-        throw new Error("유효하지 않은 구글 시트 URL입니다.");
+        throw new Error("유효하지 않은 시트 주소입니다.");
       }
 
-      // Try Google Sheets CSV export URLs
       const csvEndpoints = [
         `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv&gid=${gid}`,
         `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv&gid=${gid}`
       ];
 
       let rawCsv = null;
-      let lastError = null;
-
       for (const endpoint of csvEndpoints) {
         try {
           const res = await fetch(endpoint, { cache: "no-store" });
@@ -445,37 +456,31 @@
               break;
             }
           }
-        } catch (err) {
-          lastError = err;
-        }
+        } catch (err) {}
       }
 
       if (!rawCsv) {
-        throw new Error("구글 시트를 읽어올 수 없습니다. '공유' 설정에서 '링크가 있는 모든 사용자에게 공개(뷰어)'로 되어있는지 확인하세요.");
+        throw new Error("구글 시트를 읽어올 수 없습니다. '링크가 있는 모든 사용자 - 뷰어' 공유를 확인해주세요.");
       }
 
       const rows = parseCSV(rawCsv);
-      if (rows.length === 0) {
-        throw new Error("시트에 데이터가 비어 있습니다.");
-      }
+      if (rows.length === 0) throw new Error("시트가 비어있습니다.");
 
-      // Detect header row (e.g. "영어", "해석", "예문" or "English", "Korean")
       let startRowIndex = 0;
-      const firstRowFirstCol = (rows[0][0] || "").toLowerCase();
-      if (firstRowFirstCol.includes("영어") || firstRowFirstCol.includes("english") || firstRowFirstCol.includes("단어") || firstRowFirstCol.includes("word")) {
+      const firstCol = (rows[0][0] || "").toLowerCase();
+      if (firstCol.includes("영어") || firstCol.includes("english") || firstCol.includes("단어") || firstCol.includes("word")) {
         startRowIndex = 1;
       }
 
-      const parsedWords = [];
+      const parsed = [];
       for (let i = startRowIndex; i < rows.length; i++) {
         const row = rows[i];
         const english = (row[0] || "").trim();
         const korean = (row[1] || "").trim();
         const example = (row[2] || "").trim();
 
-        // Include row if either English or Korean exists
         if (english || korean) {
-          parsedWords.push({
+          parsed.push({
             english: english || "-",
             korean: korean || "-",
             example: example || "등록된 예문이 없습니다."
@@ -483,23 +488,20 @@
         }
       }
 
-      if (parsedWords.length === 0) {
-        throw new Error("유효한 단어 데이터가 시트에 없습니다.");
-      }
-
-      return parsedWords;
+      if (parsed.length === 0) throw new Error("단어 데이터가 없습니다.");
+      return parsed;
     }
 
     function updateSyncStatus(status, text) {
       if (status === "loading") {
-        syncStatusDot.className = "w-2 h-2 rounded-full bg-amber-400 animate-ping";
-        syncStatusText.textContent = text || "연결 중...";
+        syncStatusDot.className = "w-1.5 h-1.5 rounded-full bg-amber-400 animate-ping";
+        syncStatusText.textContent = text || "연동 중...";
       } else if (status === "success") {
-        syncStatusDot.className = "w-2 h-2 rounded-full bg-emerald-500";
-        syncStatusText.textContent = text || "구글 시트 연동 완료";
-      } else if (status === "error") {
-        syncStatusDot.className = "w-2 h-2 rounded-full bg-rose-500";
-        syncStatusText.textContent = text || "연동 실패 (샘플 모드)";
+        syncStatusDot.className = "w-1.5 h-1.5 rounded-full bg-emerald-500";
+        syncStatusText.textContent = text || "연동 완료";
+      } else {
+        syncStatusDot.className = "w-1.5 h-1.5 rounded-full bg-rose-500";
+        syncStatusText.textContent = text || "샘플 모드";
       }
     }
 
@@ -509,18 +511,14 @@
       const toastIcon = document.getElementById('toastIcon');
 
       toastMsg.textContent = msg;
-      if (isError) {
-        toastIcon.className = "fa-solid fa-circle-exclamation text-rose-400";
-      } else {
-        toastIcon.className = "fa-solid fa-check text-red-400";
-      }
+      toastIcon.className = isError ? "fa-solid fa-circle-exclamation text-rose-400 text-xs" : "fa-solid fa-check text-red-400 text-xs";
 
       toast.classList.remove('opacity-0');
       toast.classList.add('opacity-100');
       setTimeout(() => {
         toast.classList.remove('opacity-100');
         toast.classList.add('opacity-0');
-      }, 2600);
+      }, 2200);
     }
 
     function determineCardMode() {
@@ -529,6 +527,74 @@
       } else {
         currentCardMode = studyMode;
       }
+    }
+
+    // AI 예문 1문장 생성 및 캐싱
+    async function loadCompanionAiExample(wordItem) {
+      const cacheKey = wordItem.english;
+      if (aiExampleCache.has(cacheKey)) {
+        displayAiExample(aiExampleCache.get(cacheKey));
+        return;
+      }
+
+      // 초기 대기 텍스트
+      aiExampleContent.textContent = "AI가 추가 예문을 생성하고 있습니다...";
+      aiExampleMeaning.textContent = "";
+
+      try {
+        const apiKey = "";
+        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${apiKey}`;
+        
+        const systemPrompt = "You are a native English teacher. Generate exactly one realistic, natural, clear English example sentence for the given word, followed by its accurate Korean translation. Keep it modern, concise, and easy to memorize.";
+        const userPrompt = `Word: "${wordItem.english}" (Meaning: "${wordItem.korean}"). Return exactly a JSON object with keys "en" and "ko". Do not write markdown blocks or backticks.`;
+
+        const response = await fetch(apiUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: userPrompt }] }],
+            systemInstruction: { parts: [{ text: systemPrompt }] },
+            generationConfig: {
+              responseMimeType: "application/json",
+              responseSchema: {
+                type: "OBJECT",
+                properties: {
+                  "en": { "type": "STRING" },
+                  "ko": { "type": "STRING" }
+                },
+                required: ["en", "ko"]
+              }
+            }
+          })
+        });
+
+        const result = await response.json();
+        const jsonText = result?.candidates?.[0]?.content?.parts?.[0]?.text;
+        if (jsonText) {
+          const parsed = JSON.parse(jsonText);
+          const data = { en: parsed.en, ko: parsed.ko };
+          aiExampleCache.set(cacheKey, data);
+          if (words[currentIndex]?.english === cacheKey) {
+            displayAiExample(data);
+          }
+        } else {
+          throw new Error();
+        }
+      } catch (e) {
+        const fallback = {
+          en: `She mastered the word "${wordItem.english}" in no time.`,
+          ko: `그녀는 "${wordItem.korean}"의 의미를 금방 마스터했습니다.`
+        };
+        aiExampleCache.set(cacheKey, fallback);
+        if (words[currentIndex]?.english === cacheKey) {
+          displayAiExample(fallback);
+        }
+      }
+    }
+
+    function displayAiExample(data) {
+      aiExampleContent.textContent = data.en || "-";
+      aiExampleMeaning.textContent = data.ko || "";
     }
 
     function renderCard(resetReveal = true) {
@@ -547,28 +613,26 @@
       progressBar.style.width = `${((currentIndex + 1) / words.length) * 100}%`;
       totalWordCountBadge.textContent = words.length;
 
+      // 폰트 잔상 및 중복 표기 방지: 텍스트를 깔끔하게 교체
       if (currentCardMode === 'enToKo') {
         promptLabel.textContent = "English Word (A)";
         promptContent.textContent = item.english;
-        promptContent.className = "text-3xl sm:text-4xl md:text-5xl font-black text-zinc-900 tracking-tight leading-tight mb-2";
+        promptContent.className = "text-2xl sm:text-3xl font-extrabold text-zinc-900 tracking-tight leading-snug py-1";
 
-        // 영어 단어일 때는 발음 듣기 표시
+        // 영어일 때만 윗칸 발음 표시
         speakPromptBtn.classList.remove('hidden');
 
         answerContent.textContent = item.korean;
-        answerContent.className = "text-2xl sm:text-3xl font-extrabold text-red-600";
         speakAnswerBtn.classList.add('hidden');
       } else {
         promptLabel.textContent = "Korean Meaning (B)";
         promptContent.textContent = item.korean;
-        promptContent.className = "text-2xl sm:text-3xl md:text-4xl font-extrabold text-zinc-900 tracking-tight leading-snug mb-2";
+        promptContent.className = "text-xl sm:text-2xl font-bold text-zinc-900 tracking-tight leading-snug py-1";
 
-        // Korean Meaning일 때는 발음 듣기 표시 숨김
+        // 한국어일 때 윗칸 발음 제거
         speakPromptBtn.classList.add('hidden');
 
         answerContent.textContent = item.english;
-        answerContent.className = "text-2xl sm:text-3xl font-extrabold text-red-600";
-
         if (!isRevealed) {
           speakAnswerBtn.classList.add('hidden');
         } else {
@@ -578,20 +642,21 @@
 
       exampleContent.textContent = item.example;
 
-      // Show/Hide Reveal State with Gray & Red Button styling
       if (isRevealed) {
         answerSection.classList.remove('hidden');
         revealBtnText.textContent = "Next";
-        revealBtnIcon.className = "fa-solid fa-arrow-right";
-        revealBtn.className = "flex-1 max-w-xs py-3 px-6 rounded-xl bg-zinc-900 hover:bg-black text-white font-bold text-sm sm:text-base shadow-lg shadow-zinc-900/25 active:scale-95 transition-all flex items-center justify-center gap-2";
+        revealBtnIcon.className = "fa-solid fa-arrow-right text-xs";
+        revealBtn.className = "flex-1 h-11 px-4 rounded-xl bg-zinc-900 hover:bg-black text-white font-bold text-sm shadow-md active:scale-98 transition flex items-center justify-center gap-1.5";
+        
+        // AI 예문 트리거
+        loadCompanionAiExample(item);
       } else {
         answerSection.classList.add('hidden');
         revealBtnText.textContent = "정답 & 예문 확인";
-        revealBtnIcon.className = "fa-solid fa-eye";
-        revealBtn.className = "flex-1 max-w-xs py-3 px-6 rounded-xl bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700 text-white font-bold text-sm sm:text-base shadow-lg shadow-red-500/25 active:scale-95 transition-all flex items-center justify-center gap-2";
+        revealBtnIcon.className = "fa-solid fa-eye text-xs";
+        revealBtn.className = "flex-1 h-11 px-4 rounded-xl bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 text-white font-bold text-sm shadow-md shadow-red-500/20 active:scale-98 transition flex items-center justify-center gap-1.5";
       }
 
-      // Prev / Next button state
       prevBtn.disabled = currentIndex === 0;
       nextBtn.disabled = currentIndex === words.length - 1;
     }
@@ -601,12 +666,11 @@
         isRevealed = true;
         renderCard(false);
       } else {
-        // If already revealed, move to next card
         if (currentIndex < words.length - 1) {
           currentIndex++;
           renderCard(true);
         } else {
-          showToast("마지막 단어입니다! 처음으로 돌아가거나 순서를 섞어보세요.");
+          showToast("마지막 단어입니다!");
         }
       }
     }
@@ -625,42 +689,35 @@
       }
     }
 
-    // Helper to find the best available US English female voice
     function getUSFemaleVoice() {
       if (!('speechSynthesis' in window)) return null;
       const voices = window.speechSynthesis.getVoices();
       if (!voices || voices.length === 0) return null;
 
-      // Priority list of popular high-quality US Female voices across Windows, macOS, iOS, Android, and Chrome
       const femaleIdentifiers = [
         'samantha', 'victoria', 'jenny', 'zira', 'ava', 'allison', 
         'karen', 'google us english', 'natural', 'female'
       ];
 
-      // 1. Try to find an en-US voice matching known female names
-      for (const identifier of femaleIdentifiers) {
+      for (const id of femaleIdentifiers) {
         const match = voices.find(v => 
           (v.lang === 'en-US' || v.lang === 'en_US') && 
-          v.name.toLowerCase().includes(identifier)
+          v.name.toLowerCase().includes(id)
         );
         if (match) return match;
       }
 
-      // 2. Try any English voice with 'female' in its name
       const genericFemale = voices.find(v => 
-        v.lang.startsWith('en') && 
-        /female|woman/i.test(v.name)
+        v.lang.startsWith('en') && /female|woman/i.test(v.name)
       );
       if (genericFemale) return genericFemale;
 
-      // 3. Fallback to any en-US voice
       const anyUsVoice = voices.find(v => v.lang === 'en-US' || v.lang === 'en_US');
       if (anyUsVoice) return anyUsVoice;
 
       return voices.find(v => v.lang.startsWith('en')) || null;
     }
 
-    // Preload available voices
     if ('speechSynthesis' in window) {
       window.speechSynthesis.onvoiceschanged = () => {
         window.speechSynthesis.getVoices();
@@ -669,20 +726,17 @@
 
     function speakText(text, lang = 'en-US') {
       if (!('speechSynthesis' in window)) {
-        showToast("브라우저가 음성 듣기(TTS)를 지원하지 않습니다.", true);
+        showToast("음성 기능이 지원되지 않는 브라우저입니다.", true);
         return;
       }
       window.speechSynthesis.cancel();
       const utterance = new SpeechSynthesisUtterance(text);
       utterance.lang = lang;
-      utterance.rate = 1.1; // 1.1배속 설정
+      utterance.rate = 1.1; // 1.1배속
 
-      // 미국 여성 음성 매칭 적용
       if (lang.startsWith('en')) {
         const femaleVoice = getUSFemaleVoice();
-        if (femaleVoice) {
-          utterance.voice = femaleVoice;
-        }
+        if (femaleVoice) utterance.voice = femaleVoice;
       }
 
       window.speechSynthesis.speak(utterance);
@@ -691,21 +745,12 @@
     function speakPrompt() {
       const item = words[currentIndex];
       if (!item) return;
-
       if (currentCardMode === 'enToKo') {
         speakText(item.english, 'en-US');
-      } else {
-        speakText(item.korean, 'ko-KR');
       }
     }
 
     function speakCurrentWord() {
-      // In Korean question mode before reveal, do not spoil the English word!
-      if (currentCardMode === 'koToEn' && !isRevealed) {
-        showToast("🔒 정답(영어)을 확인한 후에 발음을 들을 수 있습니다!", false);
-        return;
-      }
-
       const item = words[currentIndex];
       if (item && item.english) {
         speakText(item.english, 'en-US');
@@ -719,6 +764,15 @@
       }
     }
 
+    function speakCompanionExample() {
+      const item = words[currentIndex];
+      if (!item) return;
+      const data = aiExampleCache.get(item.english);
+      if (data && data.en) {
+        speakText(data.en, 'en-US');
+      }
+    }
+
     function shuffleArray(arr) {
       for (let i = arr.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
@@ -729,11 +783,8 @@
     function shuffleWords(showToastMessage = true) {
       shuffleArray(words);
       currentIndex = 0;
-      bookmarkedIndices.clear();
       renderCard(true);
-      if (showToastMessage) {
-        showToast("단어 순서를 무작위로 섞었습니다.");
-      }
+      if (showToastMessage) showToast("단어를 무작위로 섞었습니다.");
     }
 
     function renderWordList(filter = '') {
@@ -745,33 +796,26 @@
         .filter(w => w.english.toLowerCase().includes(lower) || w.korean.toLowerCase().includes(lower));
 
       if (filtered.length === 0) {
-        wordListContainer.innerHTML = `
-          <div class="text-center py-8 text-zinc-400 text-xs">
-            일치하는 단어가 없습니다.
-          </div>
-        `;
+        wordListContainer.innerHTML = `<div class="text-center py-6 text-zinc-400 text-xs">검색 결과가 없습니다.</div>`;
         return;
       }
 
       filtered.forEach((item) => {
         const isCurrent = item.originalIndex === currentIndex;
         const row = document.createElement('div');
-        row.className = `p-3 rounded-xl hover:bg-zinc-100 cursor-pointer flex items-center justify-between transition ${isCurrent ? 'bg-red-50/80 border border-red-200' : ''}`;
+        row.className = `p-2.5 rounded-xl cursor-pointer flex items-center justify-between transition ${isCurrent ? 'bg-red-50 border border-red-200' : 'hover:bg-zinc-50'}`;
         
         row.innerHTML = `
-          <div class="flex-1 pr-3">
-            <div class="flex items-center gap-2">
-              <span class="text-xs font-mono font-bold text-zinc-400">#${item.originalIndex + 1}</span>
-              <span class="font-bold text-zinc-900 text-sm ${isCurrent ? 'text-red-700' : ''}">${item.english}</span>
+          <div class="flex-1 min-w-0 pr-2">
+            <div class="flex items-center gap-1.5">
+              <span class="text-[10px] font-bold text-zinc-400">#${item.originalIndex + 1}</span>
+              <span class="font-bold text-xs truncate ${isCurrent ? 'text-red-700' : 'text-zinc-900'}">${item.english}</span>
             </div>
-            <p class="text-xs text-zinc-500 mt-0.5">${item.korean}</p>
+            <p class="text-[11px] text-zinc-500 truncate mt-0.5">${item.korean}</p>
           </div>
-          <div class="flex items-center gap-2">
-            <button class="speak-item-btn p-1.5 rounded-lg text-zinc-400 hover:text-red-600 hover:bg-white text-xs transition" data-word="${item.english}">
-              <i class="fa-solid fa-volume-high"></i>
-            </button>
-            <i class="fa-solid fa-chevron-right text-zinc-300 text-xs"></i>
-          </div>
+          <button class="speak-item-btn w-7 h-7 rounded-lg text-zinc-400 hover:text-red-600 flex items-center justify-center shrink-0" data-word="${item.english}">
+            <i class="fa-solid fa-volume-high text-[11px]"></i>
+          </button>
         `;
 
         row.addEventListener('click', (e) => {
@@ -792,16 +836,18 @@
     revealBtn.addEventListener('click', handleRevealOrNext);
     prevBtn.addEventListener('click', handlePrev);
     nextBtn.addEventListener('click', handleNext);
-    shuffleBtn.addEventListener('click', shuffleWords);
+    shuffleBtn.addEventListener('click', () => shuffleWords(true));
 
     if (speakPromptBtn) speakPromptBtn.addEventListener('click', speakPrompt);
+    if (speakAnswerBtn) speakAnswerBtn.addEventListener('click', speakCurrentWord);
+    if (speakExampleBtn) speakExampleBtn.addEventListener('click', speakCurrentExample);
+    if (speakAiExampleBtn) speakAiExampleBtn.addEventListener('click', speakCompanionExample);
 
-    // Manual Refresh / Sync Button Event
+    // Sync button
     syncNowBtn.addEventListener('click', async () => {
       syncNowBtn.disabled = true;
       syncNowIcon.classList.add('fa-spin');
-      showToast("구글 시트에서 최신 데이터를 동기화하는 중입니다...");
-      
+      showToast("동기화 중...");
       try {
         await loadSheetData(currentSheetUrl);
       } finally {
@@ -810,35 +856,15 @@
       }
     });
 
-    if (speakBtn) speakBtn.addEventListener('click', speakCurrentWord);
-    speakAnswerBtn.addEventListener('click', speakCurrentWord);
-    speakExampleBtn.addEventListener('click', speakCurrentExample);
-
-    if (bookmarkBtn) {
-      bookmarkBtn.addEventListener('click', () => {
-        if (bookmarkedIndices.has(currentIndex)) {
-          bookmarkedIndices.delete(currentIndex);
-          showToast("북마크가 해제되었습니다.");
-        } else {
-          bookmarkedIndices.add(currentIndex);
-          showToast("단어를 북마크에 추가했습니다!");
-        }
-        renderCard(false);
-      });
-    }
-
-    // Study Mode Change
+    // Study Mode switchers
     function setStudyMode(mode) {
       studyMode = mode;
-      modeEnToKo.className = mode === 'enToKo' 
-        ? "flex-1 sm:flex-none px-3.5 py-1.5 text-xs font-bold rounded-lg transition-all shadow-sm bg-white text-red-600"
-        : "flex-1 sm:flex-none px-3.5 py-1.5 text-xs font-semibold rounded-lg text-zinc-600 hover:text-zinc-900 transition-all";
-      modeKoToEn.className = mode === 'koToEn' 
-        ? "flex-1 sm:flex-none px-3.5 py-1.5 text-xs font-bold rounded-lg transition-all shadow-sm bg-white text-red-600"
-        : "flex-1 sm:flex-none px-3.5 py-1.5 text-xs font-semibold rounded-lg text-zinc-600 hover:text-zinc-900 transition-all";
-      modeRandom.className = mode === 'random' 
-        ? "flex-1 sm:flex-none px-3.5 py-1.5 text-xs font-bold rounded-lg transition-all shadow-sm bg-white text-red-600"
-        : "flex-1 sm:flex-none px-3.5 py-1.5 text-xs font-semibold rounded-lg text-zinc-600 hover:text-zinc-900 transition-all";
+      const activeClass = "py-1.5 text-[11px] font-bold rounded-lg transition-all shadow-xs bg-white text-red-600";
+      const inactiveClass = "py-1.5 text-[11px] font-semibold rounded-lg text-zinc-600 transition-all";
+
+      modeRandom.className = mode === 'random' ? activeClass : inactiveClass;
+      modeEnToKo.className = mode === 'enToKo' ? activeClass : inactiveClass;
+      modeKoToEn.className = mode === 'koToEn' ? activeClass : inactiveClass;
 
       renderCard(true);
     }
@@ -847,56 +873,57 @@
     modeKoToEn.addEventListener('click', () => setStudyMode('koToEn'));
     modeRandom.addEventListener('click', () => setStudyMode('random'));
 
-    // Keyboard Shortcuts
+    // Keyboard navigation (for tablets & desktop)
     window.addEventListener('keydown', (e) => {
-      // Don't trigger shortcuts if user is typing in an input
       if (e.target.tagName === 'INPUT') return;
-
       if (e.code === 'Space') {
         e.preventDefault();
         handleRevealOrNext();
       } else if (e.code === 'ArrowLeft') {
-        e.preventDefault();
         handlePrev();
       } else if (e.code === 'ArrowRight') {
-        e.preventDefault();
         handleNext();
-      } else if (e.key === 'v' || e.key === 'V') {
-        speakCurrentWord();
-      } else if (e.key === 'e' || e.key === 'E') {
-        speakCurrentExample();
       }
     });
 
-    // Modal controls
+    // Touch Swipe for mobile cards
+    let touchStartX = 0;
+    let touchEndX = 0;
+    const flashcardEl = document.getElementById('flashcard');
+
+    flashcardEl.addEventListener('touchstart', (e) => {
+      touchStartX = e.changedTouches[0].screenX;
+    }, { passive: true });
+
+    flashcardEl.addEventListener('touchend', (e) => {
+      touchEndX = e.changedTouches[0].screenX;
+      if (touchStartX - touchEndX > 50) {
+        handleNext(); // Swipe Left -> Next
+      } else if (touchEndX - touchStartX > 50) {
+        handlePrev(); // Swipe Right -> Prev
+      }
+    }, { passive: true });
+
+    // Modals
     toggleListBtn.addEventListener('click', () => {
       renderWordList();
       listModal.classList.remove('hidden');
       searchInput.value = '';
-      searchInput.focus();
     });
-
     closeListBtn.addEventListener('click', () => listModal.classList.add('hidden'));
     listModal.addEventListener('click', (e) => {
       if (e.target === listModal) listModal.classList.add('hidden');
     });
 
-    searchInput.addEventListener('input', (e) => {
-      renderWordList(e.target.value);
-    });
+    searchInput.addEventListener('input', (e) => renderWordList(e.target.value));
 
     configBtn.addEventListener('click', () => {
       sheetUrlInput.value = currentSheetUrl;
       settingsModal.classList.remove('hidden');
     });
-
     closeSettingsBtn.addEventListener('click', () => settingsModal.classList.add('hidden'));
     settingsModal.addEventListener('click', (e) => {
       if (e.target === settingsModal) settingsModal.classList.add('hidden');
-    });
-
-    openSheetBtn.addEventListener('click', () => {
-      window.open(currentSheetUrl, '_blank');
     });
 
     resetSampleBtn.addEventListener('click', () => {
@@ -905,10 +932,7 @@
 
     saveSheetUrlBtn.addEventListener('click', async () => {
       const newUrl = sheetUrlInput.value.trim();
-      if (!newUrl) {
-        showToast("URL을 입력해주세요.", true);
-        return;
-      }
+      if (!newUrl) return;
       currentSheetUrl = newUrl;
       settingsModal.classList.add('hidden');
       await loadSheetData(currentSheetUrl);
@@ -920,13 +944,12 @@
         words = fetchedWords;
         shuffleArray(words);
         currentIndex = 0;
-        updateSyncStatus("success", `동기화 완료 (${words.length}개 단어 - 랜덤 셔플됨)`);
+        updateSyncStatus("success", `연동됨 (${words.length}개)`);
         renderCard(true);
-        showToast(`구글 시트 연동 완료! 총 ${words.length}개 단어가 랜덤하게 배치되었습니다.`);
+        showToast(`${words.length}개 단어가 준비되었습니다.`);
       } catch (err) {
-        console.warn("Sheet Load Error: ", err);
-        updateSyncStatus("error", "시트 권한 확인 필요 (샘플 데이터 사용 중)");
-        showToast("시트 접근 권한을 확인해주세요. 기본 단어장으로 시작합니다.", true);
+        updateSyncStatus("error", "권한 확인 필요");
+        showToast("시트 접근 권한 확인 필요 (기본 단어장 실행)", true);
         words = [...FALLBACK_WORDS];
         shuffleArray(words);
         currentIndex = 0;
@@ -934,7 +957,6 @@
       }
     }
 
-    // Window Load Initiation
     window.addEventListener('load', () => {
       shuffleArray(words);
       sheetUrlInput.value = currentSheetUrl;
