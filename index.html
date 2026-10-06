@@ -511,6 +511,41 @@
     let currentActiveItem = null; // 현재 화면에 표시 중인 고정 단어 객체
     let isSpeakingAudio = false;
     const aiExampleCache = new Map();
+    const sentenceTranslationCache = new Map();
+
+    // 기본 단어 및 주요 예문 정적 문장 번역 사전 (모바일 오프라인/통신지연 대비)
+    const PREDEFINED_SENTENCE_TRANSLATIONS = {
+      "he was meticulous about keeping his desk tidy.": "그는 책상을 깔끔하게 정리하는 데 매우 꼼꼼했습니다.",
+      "the team showed great resilience in overcoming defeat.": "그 팀은 패배를 극복하는 과정에서 엄청난 회복력을 보여주었습니다.",
+      "smartphones have become ubiquitous in daily life.": "스마트폰은 일상생활 어디에나 존재하는 흔한 물건이 되었습니다.",
+      "fashions are ephemeral, but true style lasts.": "유행은 일시적이지만 진정한 스타일은 영원합니다.",
+      "she gave a remarkably lucid explanation of the concept.": "그녀는 그 개념에 대해 놀라울 정도로 명쾌하게 설명해 주었습니다.",
+      "we need a pragmatic solution rather than high ideals.": "우리는 거창한 이상보다 현실적이고 실용적인 해결책이 필요합니다.",
+      "the committee scrutinized every clause of the contract.": "위원회는 계약서의 모든 조항을 면밀하게 검토했습니다.",
+      "old people are especially vulnerable to the flu.": "어르신들은 특히 독감에 취약합니다.",
+      "give me a minute to figure out how this works.": "이게 어떻게 작동하는지 알아낼 시간 좀 잠깐만 줘.",
+      "let's touch base next monday before the team meeting.": "다음 주 월요일 팀 회의 전에 간단히 상황을 먼저 공유하자.",
+      "that totally makes sense, thanks for explaining.": "그거 완전 이해되고 말이 되네, 설명해 줘서 고마워.",
+      "we should wrap up this meeting in five minutes.": "우리 이 회의 5분 안에 슬슬 마무리해야 해.",
+      "i'm still on the fence about moving to new york.": "나 뉴욕으로 이사 가는 거에 대해 아직도 망설이고 있어.",
+      "we haven't seen each other in ages, let's grab coffee and catch up.": "우리 진짜 오랜만이다, 커피 한잔 마시면서 밀린 이야기나 나누자.",
+      "we don't have a fixed plan for tomorrow, let's just play it by ear.": "내일 정해진 계획은 없으니까 그냥 상황 봐서 즉흥적으로 결정하자.",
+      "it's already 7 pm, let's call it a day and head home.": "벌써 저녁 7시네, 오늘 일은 여기서 마무리하고 퇴근하자.",
+      "she texted me out of the blue after three years.": "그녀가 3년 만에 난데없이 뜬금없이 나한테 문자를 보냈어.",
+      "guess who i ran into at the grocery store today?": "나 오늘 마트에서 누구랑 우연히 마주쳤는지 맞춰봐.",
+      "i felt a bit overwhelmed with so many tasks at once.": "한꺼번에 너무 많은 일이 몰려서 정신없이 압도당하는 기분이었어.",
+      "the hike was exhausting, but the view was totally worth it.": "등산은 정말 힘들었지만 경치는 그 고생을 할 만한 가치가 충분했어.",
+      "are you having second thoughts about taking the new job?": "새 직장으로 가는 것에 대해 다시 생각해보니 의구심이 드니?",
+      "don't take your health for granted; get some rest.": "건강을 당연하게 여기지 말고 휴식을 좀 취해.",
+      "her stories on instagram are so honest and relatable.": "인스타그램에 올라온 그녀의 이야기들은 너무 솔직해서 누구나 공감할 수 있어.",
+      "don't stress over little details, just go with the flow.": "작은 일에 스트레스받지 말고 그냥 흘러가는 대로 둬.",
+      "the application process was super easy and straightforward.": "지원 절차는 정말 쉽고 매우 직관적이었어.",
+      "we took a spontaneous weekend road trip to the coast.": "우리는 주말에 즉흥적으로 해안가로 드라이브 여행을 떠났어.",
+      "stop procrastinating and finish your assignment now.": "자꾸 일 미루지 말고 지금 당장 과제부터 끝내.",
+      "things will get better soon, just hang in there!": "곧 다 괜찮아질 테니까 조금만 더 힘내고 버텨봐!",
+      "your prediction about the game was completely spot on.": "그 경기에 대한 네 예측은 완벽하게 딱 들어맞았어.",
+      "i'm feeling a little under the weather, so i'll stay in tonight.": "오늘 몸이 좀 으슬으슬 컨디션이 안 좋아서 밤에는 집에 있으려고 해."
+    };
 
     // 시트 예문과 완벽하게 구별되는 큐레이션 회화 예문 사전
     const DISTINCT_COMPANION_EXAMPLES = {
@@ -899,19 +934,67 @@
       }
     }
 
+    // 모바일 브라우저 CORS 및 네트워크 제약에 완벽 대응하는 다중 문장 번역 엔진
     async function translateSentence(sentence) {
-      if (!sentence || sentence === '-' || sentence.trim() === '') return "";
+      if (!sentence || sentence === '-' || sentence.trim() === '' || sentence === '등록된 예문이 없습니다.') {
+        return "";
+      }
+
+      const cleanSentence = sentence.trim();
+      const lowerKey = cleanSentence.toLowerCase().replace(/["']/g, '');
+
+      // 1. 메모리 캐시 확인
+      if (sentenceTranslationCache.has(lowerKey)) {
+        return sentenceTranslationCache.get(lowerKey);
+      }
+
+      // 2. 정적 사전 확인
+      if (PREDEFINED_SENTENCE_TRANSLATIONS[lowerKey]) {
+        const trans = PREDEFINED_SENTENCE_TRANSLATIONS[lowerKey];
+        sentenceTranslationCache.set(lowerKey, trans);
+        return trans;
+      }
+
+      // 3. 1차 시도: 구글 번역 gtx API
       try {
-        const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=ko&dt=t&q=${encodeURIComponent(sentence.trim())}`;
-        const res = await fetch(url);
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 2500);
+        const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=ko&dt=t&q=${encodeURIComponent(cleanSentence)}`;
+        const res = await fetch(url, { signal: controller.signal });
+        clearTimeout(timeoutId);
+
         if (res.ok) {
           const json = await res.json();
           if (json && json[0]) {
-            return json[0].map(item => item[0]).join('').trim();
+            const translatedText = json[0].map(item => item[0]).join('').trim();
+            if (translatedText && translatedText !== cleanSentence) {
+              sentenceTranslationCache.set(lowerKey, translatedText);
+              return translatedText;
+            }
           }
         }
       } catch (err) {}
-      return currentActiveItem?.korean ? `(${currentActiveItem.korean})` : "";
+
+      // 4. 2차 시도: 모바일 CORS 공식 지원 MyMemory 번역 API
+      try {
+        const controller2 = new AbortController();
+        const timeoutId2 = setTimeout(() => controller2.abort(), 3000);
+        const mmUrl = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(cleanSentence)}&langpair=en|ko`;
+        const res2 = await fetch(mmUrl, { signal: controller2.signal });
+        clearTimeout(timeoutId2);
+
+        if (res2.ok) {
+          const data2 = await res2.json();
+          const translated2 = data2?.responseData?.translatedText?.trim();
+          if (translated2 && translated2 !== cleanSentence && !translated2.includes("QUERY LENGTH LIMIT EXCEEDED")) {
+            sentenceTranslationCache.set(lowerKey, translated2);
+            return translated2;
+          }
+        }
+      } catch (err) {}
+
+      // 단어 뜻을 대신 넣지 않고 자연스러운 문장 번역 상태 유지
+      return "";
     }
 
     // AI 예문 1문장 생성 및 캐싱 (시트 예문과 절대 겹치지 않도록 완벽 분리)
@@ -1323,16 +1406,21 @@ Create a completely different high-frequency, natural conversational sentence. R
 
           let meaning = currentActiveItem?.exampleKo ? currentActiveItem.exampleKo.trim() : '';
 
+          // 단어의 단순 뜻(괄호 포함)으로 오염되어 있는 경우 문장 번역으로 강제 재시도
+          if (meaning && (meaning.startsWith('(') && meaning.endsWith(')'))) {
+            meaning = '';
+          }
+
           if (!meaning) {
-            sheetExampleMeaning.textContent = "시트 예문 번역 중...";
+            sheetExampleMeaning.textContent = "시트 예문 문장 번역 중...";
             sheetExampleMeaningBox.classList.remove('hidden');
             meaning = await translateSentence(sentenceAbove);
-            if (currentActiveItem) {
+            if (meaning && currentActiveItem) {
               currentActiveItem.exampleKo = meaning;
             }
           }
 
-          sheetExampleMeaning.textContent = meaning || "해석을 불러올 수 없습니다.";
+          sheetExampleMeaning.textContent = meaning || "문장 전체 해석을 가져오는 중입니다. 잠시 후 다시 눌러주세요.";
           sheetExampleMeaningBox.classList.remove('hidden');
           if (toggleSheetMeaningText) toggleSheetMeaningText.textContent = "해석 닫기";
         } else {
@@ -1354,22 +1442,20 @@ Create a completely different high-frequency, natural conversational sentence. R
 
           let meaning = aiExampleMeaning ? aiExampleMeaning.textContent.trim() : '';
           
-          // 비어 있거나 기본 placeholder 상태일 경우 현재 문장 기준으로 번역 보충
-          if (!meaning || meaning === '-' || meaning === '해석을 준비하고 있습니다.') {
+          // 단어 뜻(괄호)으로 잘못 들어가 있거나 비어 있는 경우 완전한 문장 번역으로 교체
+          if (!meaning || meaning === '-' || meaning === '해석을 준비하고 있습니다.' || (meaning.startsWith('(') && meaning.endsWith(')'))) {
             const cleanKey = currentActiveItem?.english?.trim()?.toLowerCase();
             const cached = cleanKey ? aiExampleCache.get(cleanKey) : null;
-            if (cached && cached.ko) {
+            if (cached && cached.ko && !cached.ko.startsWith('(')) {
               meaning = cached.ko;
-            } else if (currentActiveItem?.exampleKo) {
-              meaning = currentActiveItem.exampleKo;
             } else if (sentenceAbove && sentenceAbove !== '-' && !sentenceAbove.includes('생성 중')) {
-              aiExampleMeaning.textContent = "윗문장 번역 중...";
+              aiExampleMeaning.textContent = "윗문장 전체 번역 중...";
               aiExampleMeaningBox.classList.remove('hidden');
               meaning = await translateSentence(sentenceAbove);
             }
           }
 
-          aiExampleMeaning.textContent = meaning || "해석을 불러올 수 없습니다.";
+          aiExampleMeaning.textContent = meaning || "문장 전체 해석을 가져오는 중입니다. 잠시 후 다시 눌러주세요.";
           aiExampleMeaningBox.classList.remove('hidden');
           if (toggleAiMeaningText) toggleAiMeaningText.textContent = "해석 닫기";
         } else {
