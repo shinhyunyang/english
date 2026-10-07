@@ -1402,10 +1402,10 @@
 
       try {
         const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${customGeminiApiKey}`;
-        const systemPrompt = "You are an authentic American everyday conversationalist. Generate exactly ONE natural, modern, colloquial American sentence that native speakers genuinely use in daily life, coffee chats, texting, casual workplace small talk, or Netflix-style dialogues. Avoid dry textbook grammar examples and corporate buzzwords. The Korean translation must be natural, contemporary conversational Korean like a friendly subtitle, without any meta notes.";
+        const systemPrompt = "You are a bilingual linguistic coach specializing in authentic American TV drama dialogues (e.g., Netflix/HBO shows, Modern Family, Suits), everyday casual street conversations, and high-frequency TOEIC business English scenarios. Generate exactly ONE natural, punchy, spoken English sentence featuring the target expression. The Korean translation must be snappy and natural, formatted like real movie/drama subtitles or practical office talk, with context tags like [미드 대사], [일상 회화], or [토익 실무] when appropriate.";
         const userPrompt = `Target Word/Expression: "${wordItem.english}" (Core meaning: "${wordItem.korean}").
 Exclude this existing sentence: "${wordItem.example || ''}".
-Create a lively, authentic, modern American spoken sentence. Return a JSON object with keys "en" and "ko". Do not use markdown backticks.`;
+Create ONE authentic spoken American English sentence (from casual TV drama dialogue, everyday chat, or TOEIC office setting). Return JSON with keys "en" and "ko". Do not use markdown backticks.`;
 
         const response = await fetch(apiUrl, {
           method: 'POST',
